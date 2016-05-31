@@ -1,0 +1,50 @@
+name: Sourish Ghosh
+description: Undergraduate @ IIT Kharagpur
+meta_description: "Sourish Ghosh, Undergraduate @ IIT Kharagpur"
+
+aboutPage: true
+
+markdown: redcarpet
+highlighter: pygments
+
+gems: [jekyll-paginate]
+paginate: 20
+baseurl: /
+domain_name: 'http://sourishghosh.me'
+google_analytics: 'UA-XXXXXXXX-X'
+disqus: true
+disqus_shortname: 'sourishghosh'
+
+#social-icons
+facebook: Sourish69
+twitter: sourish_gh
+instagram: sourish_gh
+linkedin: sourishg
+github: sourishg
+
+# Details for the RSS feed generator
+url:            'http://sourishghosh.me'
+author:         'Sourish Ghosh'
+authorTwitter:  'sourish_gh'
+
+permalink:       /:year/:title/
+
+defaults:
+    -
+        scope:
+            path: "" # empty string for all files
+            type: pages
+        values:
+            layout: default
+    -
+        scope:
+            path: "" # empty string for all files
+            type: posts
+        values:
+            layout: post
+    -
+        scope:
+            path: ""
+            type: drafts
+        values:
+            layout: post
