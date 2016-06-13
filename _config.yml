@@ -11,7 +11,7 @@ gems: [jekyll-paginate]
 paginate: 20
 baseurl: /
 domain_name: 'http://sourishghosh.me'
-google_analytics: 'UA-XXXXXXXX-X'
+google_analytics: 'UA-78560708-1'
 disqus: true
 disqus_shortname: 'sourishghosh'
 
