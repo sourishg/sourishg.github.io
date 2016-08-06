@@ -5,6 +5,6 @@ profile: true
 ---
 
 
-I'm a third year undergraduate at **[IIT Kharagpur](http://www.iitkgp.ac.in)**, majoring in Mathematics and Computing. My research interests lie in Robotics and Computer Vision. Currently I'm doing a research internship on vision-based autonomy at the **Autonomous Mobile Robotics Laboratory, UMass Amherst**.
+I'm a third year undergraduate at **[IIT Kharagpur](http://www.iitkgp.ac.in)**, majoring in Mathematics and Computing. My research interests lie in Robotics and Computer Vision.
 
 I'm an ardent follower of Arsenal FC and I play a lot of table tennis!
