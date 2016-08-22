@@ -10,8 +10,8 @@ highlighter: rouge
 gems: [jekyll-paginate]
 paginate: 20
 baseurl: /
-domain_name: 'http://sourishghosh.me'
-google_analytics: 'UA-78560708-1'
+domain_name: 'http://sourishghosh.com'
+google_analytics: 'UA-82908038-1'
 disqus: true
 disqus_shortname: 'sourishghosh'
 
@@ -23,7 +23,7 @@ linkedin: sourishg
 github: sourishg
 
 # Details for the RSS feed generator
-url:            'http://sourishghosh.me'
+url:            'http://sourishghosh.com'
 author:         'Sourish Ghosh'
 authorTwitter:  'sourish_gh'
 
