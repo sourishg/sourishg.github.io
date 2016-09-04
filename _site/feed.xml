@@ -6,5 +6,18 @@
     <link>http://sourishghosh.com</link>
     <atom:link href="http://sourishghosh.com/feed.xml" rel="self" type="application/rss+xml" />
     
+      <item>
+        <title>Camera calibration using C++ and OpenCV</title>
+        
+        
+          <description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Sun, 04 Sep 2016 15:30:00 +0530</pubDate>
+        <link>http://sourishghosh.com/2016/camera-calibration-cpp-opencv/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2016/camera-calibration-cpp-opencv/</guid>
+      </item>
+    
   </channel>
 </rss>
