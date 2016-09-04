@@ -7,7 +7,9 @@ description: Tool to calibrate intrinsics/extrinsics of cameras efficiently
 # Introduction
 
 Often for complicated tasks in computer vision it is required that a camera be **calibrated**. Camera calibration is a necessary step in 3D computer vision in order to
-extract metric information from 2D images. If you're just looking for the code, you can find the full code here: [https://github.com/sourishg/stereo-calibration](https://github.com/sourishg/stereo-calibration)
+extract metric information from 2D images. If you're just looking for the code, you can find the full code here:
+
+> [https://github.com/sourishg/stereo-calibration](https://github.com/sourishg/stereo-calibration)
 
 # What is meant by calibrating a camera?
 
@@ -188,3 +190,8 @@ The following repository contains the full source. The file you are looking for 
 > [https://github.com/sourishg/stereo-calibration/](https://github.com/sourishg/stereo-calibration/)
 
 I have used `cmake` to build the source and the README should help you build and run the program on your machine.
+
+# Suggested Reading
+
+1. [Camera Calibration, by Zhengyou Zhang](http://www.cs.rutgers.edu/~elgammal/classes/cs534/lectures/CameraCalibration-book-chapter.pdf)
+2. [Multiple View Geometry in Computer Vision, by Richard Hartley and Andrew Zisserman](http://www.robots.ox.ac.uk/~vgg/hzbook/)
