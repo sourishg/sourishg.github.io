@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-    <title>Sourish Ghosh - Undergraduate at IIT Kharagpur</title>
+    <title>Sourish Ghosh - Calculating the fundamental matrix from camera matrices</title>
   
   <link rel="shortcut icon" href="/assets/images/favicon.ico">
   <link rel="stylesheet" href="/assets/css/style.css">
@@ -15,6 +15,8 @@
 <body>
 
   <nav class="main-nav">
+    
+        <a href="/"> <span class="arrow">←</span> Home </a>
     
 
     
@@ -27,85 +29,142 @@
 
 
   
-      <div class="profile">
-    <section id="wrapper">
-        <header id="header">
-        
-            <a href="/about">
-                <img id="avatar" class="2x" src="/assets/images/avatar.png"/>
-            </a>
-        
-            <h1>Sourish Ghosh</h1>
-            <h2>Undergraduate @ IIT Kharagpur</h2>
-            <div class="social-links">
-    
-        <a class="link" data-title="facebook.com/Sourish69" href="http://facebook.com/Sourish69" target="_blank">
-            <svg class="icon icon-facebook"><use xlink:href="#icon-facebook"></use></svg>
-        </a>
-    
 
-    
-        <a class="link" data-title="twitter.com/sourish_gh" href="http://twitter.com/sourish_gh" target="_blank">
-            <svg class="icon icon-twitter"><use xlink:href="#icon-twitter"></use></svg>
-        </a>
-    
+  <section id="wrapper" class="">
+    <style TYPE="text/css">
+code.has-jax {font: inherit; font-size: 100%; background: inherit; border: inherit;}
+</style>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // removed 'code' entry
+    }
+});
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-    
+<article class="post">
+    <header>
+        <h1>Calculating the fundamental matrix from camera matrices</h1>
+        <h2 class="headline">September 5, 2016</h2>
+    </header>
+    <section id="post-body">
+        <h1 id="introduction">Introduction</h1>
 
-    
-        <a class="link" data-title="instagram.com/sourish_gh" href="http://instagram.com/sourish_gh" target="_blank">
-            <svg class="icon icon-instagram"><use xlink:href="#icon-instagram"></use></svg>
-        </a>
-    
+<p>It is expected that you know some basics of projective geometry as well as epipolar geometry both of which are essential to understand stereo vision. I will not try to explain the derivations in detail here - you can read about them in detail in the book suggested in the references section.</p>
 
-    
+<p>I will show the closed form solution of the fundamental matrix, given two camera matrices of the stereo setup. Also the rotation and translation matrices between the two cameras should be known for this.</p>
 
-    
-        <a class="link" data-title="linkedin.com/in/sourishg" href="http://linkedin.com/in/sourishg" target="_blank">
-            <svg class="icon icon-linkedin"><use xlink:href="#icon-linkedin"></use></svg>
-        </a>
-    
+<p>I have also provided a GNU Octave code to quickly calculate the fundamental matrix.</p>
 
-    
+<h1 id="deriving-the-fundamental-matrix">Deriving the fundamental matrix</h1>
 
-    
+<p><img src="/assets/images/blog/fundamental_matrix/epipolar_geometry.png" alt="" /></p>
 
-    
-        <a class="link" data-title="github.com/sourishg" href="https://github.com/sourishg" target="_blank">
-            <svg class="icon icon-github"><use xlink:href="#icon-github"></use></svg>
-        </a>
-    
+<p>Consider the above image. $\mathbf{C}$ and $\mathbf{C’}$ are the camera centers of the left and right camera respectively. The corresponding point for $\mathbf{x}$ (left image) is $\mathbf{x’}$ in the right image. $\mathbf{x’}$ is guaranteed to lie on the epipolar line $\mathbf{l’}$. $\mathbf{X}$ is the coordinate of the point in 3D space. $\mathbf{e}$ and $\mathbf{e’}$ are the epipoles.</p>
 
-    
+<p><strong>Note</strong>: We are working in homogeneous coordinates here.</p>
 
-    
+<p>We define the fundamental matrix $\mathbf{F}$ as a mapping from a point in an image plane to an epipolar line in the other image.</p>
 
-    
-        <a class="link" data-title="sourishg@iitkgp.ac.in" href="mailto:sourishg@iitkgp.ac.in">
-            <svg class="icon icon-mail"><use xlink:href="#icon-mail"></use></svg>
-        </a>
-    
-</div>
-        </header>
+<center>$\mathbf{l'} = \mathbf{F}\mathbf{x}$</center>
+<p><br />
+The form of the fundamental matrix in terms of the two camera projection matrices,
+$\mathbf{P}$, $\mathbf{P’}$, may be derived algebraically. The ray back-projected from $\mathbf{x}$ by $\mathbf{P}$ is obtained by solving $\mathbf{P}$$\mathbf{X}$ = $\mathbf{x}$. The one-parameter family of solutions is of the form given by</p>
+
+<center>$\mathbf{X(\lambda) = \mathbf{P}^+\mathbf{x} + \lambda\mathbf{C}}$</center>
+<p><br />
+where $\mathbf{P}^+$ is the pseudo-inverse of $\mathbf{P}$, i.e. $\mathbf{PP}^+ = \mathbf{I}$, and $\mathbf{C}$ its null-vector, namely the camera centre, defined by $\mathbf{PC} = \mathbf{0}$. The ray is parametrized by the scalar $\lambda$. In particular two points on the ray are $\mathbf{P}^+\mathbf{x}$ (at $\lambda = 0$), and the first camera centre $\mathbf{C}$ (at $\lambda = \infty$). These two points are imaged by the second camera $\mathbf{P’}$ at $\mathbf{P’P}^+\mathbf{x}$ and $\mathbf{P’C}$ respectively in the second view. The epipolar line is the line joining these two projected points, namely $\mathbf{l’} = (\mathbf{P’C})\times (\mathbf{P’P}^+\mathbf{x})$. The point $\mathbf{P’C}$ is the epipole in the second image, namely the projection of the first camera centre, denoted by $\mathbf{e’}$. Thus, $\mathbf{l’} = [\mathbf{e’}]_{\times}\mathbf{P’P}^+\mathbf{x} = \mathbf{Fx}$</p>
+
+<center>$\mathbf{F} = [\mathbf{e'}]_{\times}\mathbf{P'P}^+$</center>
+<p><br />
+where $[\mathbf{e’}]_{\times}$ is a cross product matrix.</p>
+
+<p>Now the cameras are calibrated, and let’s assume the world origin is at the left camera.</p>
+
+<center>$\mathbf{P} = \mathbf{K}\left[\begin{array}{c|c}
+\mathbf{I} &amp; \mathbf{0} \\
+\end{array}\right] \quad \quad \mathbf{P'} = \mathbf{K'}\left[\begin{array}{c|c}
+\mathbf{R} &amp; \mathbf{t} \\
+\end{array}\right]$</center>
+<p><br />
+Then,</p>
+<center>$\mathbf{P}^+ = \begin{bmatrix} \mathbf{K}^{-1} \\ \mathbf{0}^\top \\ \end{bmatrix} \quad \quad \mathbf{C} = \begin{bmatrix} \mathbf{0} \\ 1 \end{bmatrix}$</center>
+<p><br />
+and</p>
+<center>$\mathbf{F} = [\mathbf{P'C}]_{\times}\mathbf{P'P}^+ = [\mathbf{K't}]_{\times}\mathbf{K'RK}^{-1} = \mathbf{K'}^{-\top}[\mathbf{t}]_{\times}\mathbf{RK}^{-1} = \mathbf{K'}^{-\top}\mathbf{R}[\mathbf{R}^{\top}\mathbf{t}]_{\times}\mathbf{K}^{-1} = \mathbf{K'}^{-\top}\mathbf{RK}^{\top}[\mathbf{KR}^{\top}\mathbf{t}]_{\times}$</center>
+<p><br />
+Hence we derived an expression for $\mathbf{F}$ purely in terms of $\mathbf{K}$, $\mathbf{K’}$, $\mathbf{R}$, and $\mathbf{t}$. The fundamental matrix relates two point correspondences in the left and right image. The relation is given as</p>
+
+<center>$\mathbf{x'^{\top}Fx} = 0$</center>
+
+<h1 id="octave-code">Octave Code</h1>
+
+<figure class="highlight"><pre><code class="language-octave" data-lang="octave">function ret = computeF(K1, K2, R, t)
+  A = K1 * R' * t
+  C = [0 -A(3) A(2); A(3) 0 -A(1); -A(2) A(1) 0]
+  ret = (inverse(K2))' * R * K1' * C
+endfunction</code></pre></figure>
+
+<p><code class="highlighter-rouge">C</code> is the cross product matrix of <code class="highlighter-rouge">A</code>. Note the structure of <code class="highlighter-rouge">C</code>. This function returns the $3 \times 3$ fundamental matrix. This can easily be implemented in C++ and OpenCV as well.</p>
+
+<h1 id="references">References</h1>
+
+<p><a href="http://www.robots.ox.ac.uk/~vgg/hzbook/">Multiple View Geometry in Computer Vision, by Richard Hartley and Andrew Zisserman</a></p>
+
     </section>
-</div>
+</article>
+<footer id="post-meta" class="clearfix">
+    <a href="http://facebook.com/Sourish69">
+        <img class="avatar" src="/assets/images/avatar.png">
+        <div>
+            <span class="dark">Sourish Ghosh</span>
+            <span>Undergraduate @ IIT Kharagpur</span>
+        </div>
+    </a>
 
-  
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/ - Calculating the fundamental matrix from camera matrices by @sourish_gh"><span class="icon-twitter"> Tweet</span></a>
 
-  <section id="wrapper" class="home">
-    <ul id="post-list">
-    
-        <li>
-            <a href="/2016/fundamental-matrix-from-camera-matrices/"><aside class="dates">Sep 05</aside></a>
-            <a href="/2016/fundamental-matrix-from-camera-matrices/">Calculating the fundamental matrix from camera matrices <h2>Closed form solution of fundamental matrix, given camera matrices</h2></a>
-        </li>
-    
-        <li>
-            <a href="/2016/camera-calibration-cpp-opencv/"><aside class="dates">Sep 04</aside></a>
-            <a href="/2016/camera-calibration-cpp-opencv/">Camera calibration using C++ and OpenCV <h2>Tool to calibrate intrinsics/extrinsics of cameras efficiently</h2></a>
-        </li>
-    
-</ul>
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+    </section>
+</footer>
+
+<!-- Disqus comments -->
+
+    <div class="archive readmore">
+        <h3>Comments</h3>
+        <section class="disqus">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'sourishghosh';
+        var disqus_developer = 0; // developer mode is on
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</section>
+    </div>
+
+
+<!-- Archive post list -->
 
 
   </section>
