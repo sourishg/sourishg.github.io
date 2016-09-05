@@ -653,7 +653,7 @@ h2.month {
   text-decoration: none;
   position: relative;
   display: inline-block;
-  height: 35px;
+  height: 30px;
   width: 35px;
 }
 .social-links > .link:hover > .icon {
@@ -706,8 +706,9 @@ h2.month {
   transition: all ease-in-out 0.2s;
 }
 
-.icon-facebook { width: 15px; height: 30px; }
-.icon-twitter { width: 15px; height: 30px; }
-.icon-instagram { width: 15px; height: 30px; }
-.icon-github { width: 15px; height: 30px; }
-.icon-linkedin { width: 15px; height: 30px; }
+.icon-facebook { width: 16px; height: 32px; }
+.icon-twitter { width: 16px; height: 32px; }
+.icon-instagram { width: 16px; height: 32px; }
+.icon-github { width: 16px; height: 32px; }
+.icon-linkedin { width: 16px; height: 32px; }
+.icon-mail { width: 16px; height: 32px; }
