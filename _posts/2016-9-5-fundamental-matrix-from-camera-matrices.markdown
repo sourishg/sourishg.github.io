@@ -2,6 +2,7 @@
 title:  "Calculating the fundamental matrix from camera matrices"
 date:   2016-9-5 10:00:00
 description: Closed form solution of fundamental matrix, given camera matrices
+tags: "computer vision, epipolar geometry, stereo vision"
 ---
 
 # Introduction

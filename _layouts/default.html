@@ -4,6 +4,19 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Sourish Ghosh">
+  <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.meta_description }}{% endif %}">
+  <meta name="keywords" content="{% if page.tags %}{{ page.tags }}{% else %}{{ site.meta_tags }}{% endif %}">
+  <!-- Social: Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="{{ site.twitter }}">
+  <meta name="twitter:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.name }}{% endif %}">
+  <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.meta_description }}{% endif %}">
+  <!-- Social: Facebook / Open Graph -->
+  <meta property="og:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.name }}{% endif %}" />
+  <meta property="og:site_name" content="{{ site.name }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.meta_description }}{% endif %}" />
   {% if page.url == site.baseurl %}
     <title>Sourish Ghosh - Undergraduate at IIT Kharagpur</title>
   {% else %}
@@ -15,7 +28,7 @@
   <link rel="stylesheet" href="{{ site.baseurl }}assets/css/highlight.css">
 </head>
 <body>
-  
+
   <div id="fb-root"></div>
   <script>(function(d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];

@@ -2,6 +2,7 @@
 title:  "Camera calibration using C++ and OpenCV"
 date:   2016-9-4 10:00:00
 description: Tool to calibrate intrinsics/extrinsics of cameras efficiently
+tags: "computer vision, camera calibration, opencv, c++"
 ---
 
 # Introduction
