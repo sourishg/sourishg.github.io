@@ -668,7 +668,7 @@ h2.month {
   content: attr(data-title);
   display: inline-block;
   position: absolute;
-  bottom: -34px;
+  bottom: -38px;
   left: -6px;
   margin: 0 auto;
   font-size: 13px;
@@ -676,7 +676,7 @@ h2.month {
   background: #222;
   color: #fff;
   border-radius: 2px;
-  height: 22px;
+  height: 28px;
   line-height: 22px;
   opacity: 0;
   transition: opacity 150ms linear, transform 150ms linear, -webkit-transform 150ms linear;
