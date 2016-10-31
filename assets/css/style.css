@@ -187,9 +187,9 @@ ul 	{ margin:0; padding:0; }
 li	{ list-style-type:circle; list-style-position:inside; }
 
 /* Line Height */
-#post-body, p { line-height:1.7; }
+#post-body, p { line-height:1.7; color: #333; font-size: 18px; }
 
-b, strong { font-weight: 500;
+b, strong { font-weight: bold;
   color: #1E2025; }
 em, i { font-style: italic; }
 
@@ -354,9 +354,16 @@ thead th,th {
 }
 
 img {
-	width: 100%;
 	max-width: 100%;
-	border-radius: 3px;
+	border: 1px solid #666;
+}
+.imgblock {
+	text-align: center;
+}
+.imgcap {
+	color: #666;
+	font-size: 14px;
+	text-align: center;
 }
 
 /* Made with Cactus Badge */

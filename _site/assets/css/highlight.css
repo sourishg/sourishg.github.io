@@ -9,6 +9,7 @@
   background: #272b2d;
   color: #d0d0d0;
   -webkit-text-size-adjust: none;
+  font-size: 14px;
 }
 
 .hljs-shebang,
@@ -107,8 +108,9 @@
 
 .highlighter-rouge {
   padding: 2px 4px;
-  font-size: 90%;
   color: #c7254e;
+  font-size: 90%;
   background-color: #f9f2f4;
   border-radius: 4px;
+  border: 1px solid #ddd;
 }
