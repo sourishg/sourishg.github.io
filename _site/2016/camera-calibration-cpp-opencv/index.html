@@ -190,7 +190,7 @@ f_x &amp; 0 &amp; c_x \\
 
 <p>We loop through all the images in our directory and convert them to grayscale images using the function <code class="highlighter-rouge">cv::cvtColor</code>.</p>
 
-<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp">    <span class="n">bool</span> <span class="n">found</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp">    <span class="kt">bool</span> <span class="n">found</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">findChessboardCorners</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">board_size</span><span class="p">,</span> <span class="n">corners</span><span class="p">,</span>
                                       <span class="n">CV_CALIB_CB_ADAPTIVE_THRESH</span> <span class="o">|</span> <span class="n">CV_CALIB_CB_FILTER_QUADS</span><span class="p">);</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">found</span><span class="p">)</span>
