@@ -1,7 +1,7 @@
 ---
 title:  "Dense 3D Reconstruction from Stereo (using LIBELAS)"
 date:   2017-3-24 00:00:00
-description: An article on dense 3D reconstruction using LIBELAS and transforming point clouds
+description: An article on dense 3D reconstruction using LIBELAS and transforming point clouds to different reference frames
 tags: "computer vision, 3d reconstruction, stereo vision, disparity maps"
 ---
 

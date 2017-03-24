@@ -10,11 +10,11 @@
         <title>Dense 3D Reconstruction from Stereo (using LIBELAS)</title>
         
         
-          <description>An article on dense 3D reconstruction using LIBELAS and transforming point clouds</description>
+          <description>An article on dense 3D reconstruction using LIBELAS and transforming point clouds to different reference frames</description>
         
         <pubDate>Fri, 24 Mar 2017 05:30:00 +0530</pubDate>
-        <link>http://sourishghosh.com/2017/dense-reconstruction-from-stereo/</link>
-        <guid isPermaLink="true">http://sourishghosh.com/2017/dense-reconstruction-from-stereo/</guid>
+        <link>http://sourishghosh.com/2017/dense-reconstruction-from-stereo-libelas/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2017/dense-reconstruction-from-stereo-libelas/</guid>
       </item>
     
       <item>
