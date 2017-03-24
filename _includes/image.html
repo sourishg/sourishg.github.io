@@ -4,12 +4,13 @@
 		{% if first_img == true %}
 		<div style="display:inline-block;">
 		{% else %}
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		{% endif %}
 			<img src="{{ image }}" height="{{ include.height }}">
 		</div>
 		{% assign first_img = false %}
 	{% endfor %}
-	<div class="imgcap">{{ include.caption }}</div>
-	<br>
 </div>
+{% if include.caption != "" %}
+<div class="imgcap">{{ include.caption }}</div>
+{% endif %}

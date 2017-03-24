@@ -111,22 +111,22 @@ $$
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/tsukuba_r.png" height="200px" />
 		</div>
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/tsukuba_d.jpg" height="200px" />
 		</div>
 		
 	
-	<div class="imgcap">This is the famous Tsukuba example from the Middlebury dataset. The first two images are the left and right images of a rectified stereo setup. The third image is the ground truth disparity map constructed from the left image.</div>
-	<br />
 </div>
+
+<div class="imgcap">This is the famous Tsukuba example from the Middlebury dataset. The first two images are the left and right images of a rectified stereo setup. The third image is the ground truth disparity map constructed from the left image.</div>
 
 <p>The disparity map shown in the above example is a grayscale image. Pixels which are colored white depict high disparity (low depth) and pixels which are coloured dark indicate low disparity (more depth). Generating accurate dense disparity maps is an active research area in computer vision. The <a href="http://vision.middlebury.edu/stereo/eval3/">Middlebury stereo evaluation</a> dataset shows the current best methods for computing dense disparity maps. It is to be noted that most of the methods from that list are global methods which formulate a global optimization problem and tries to minimize a cost or energy. These methods take significant amount of computation time and power and may not be useful for real time systems, although they tend to be really accurate. In this article a local method for computing disparity maps is presented.</p>
 
@@ -161,22 +161,22 @@ $$
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/epi-right.png" height="200px" />
 		</div>
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/epipolar_cost.png" height="200px" />
 		</div>
 		
 	
-	<div class="imgcap"><b>(a)</b> Left image with points marked whose correspondence is to be searched in the right image. <b>(b)</b> Right image with the correspondences found along epipolar lines. <b>(c)</b> Plot of cost vs disparity along the epipolar line. The disparity for which the cost is minimum is selected.</div>
-	<br />
 </div>
+
+<div class="imgcap"><b>(a)</b> Left image with points marked whose correspondence is to be searched in the right image. <b>(b)</b> Right image with the correspondences found along epipolar lines. <b>(c)</b> Plot of cost vs disparity along the epipolar line. The disparity for which the cost is minimum is selected.</div>
 
 <p>The cost graph shown above depicts a single minimum. This indicates a high confidence match. In some cases there might be multiple minima, which usually results in low confidence incorrect matches. This usually occurs in textureless regions. Why? Think about it!</p>
 
@@ -203,13 +203,13 @@ $$
 
 <p>Declare all necessary variables. <code class="highlighter-rouge">img_left</code> and <code class="highlighter-rouge">img_right</code> stores the rectified stereo images. <code class="highlighter-rouge">img_left_desc</code> and <code class="highlighter-rouge">img_right_desc</code> stores the descriptor values of all the key points. <code class="highlighter-rouge">kpl</code> and <code class="highlighter-rouge">kpr</code> stores the left and right image key points respectively.</p>
 
-<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">bool</span> <span class="nf">isLeftKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">bool</span> <span class="nf">isLeftKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
   <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
   <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span>
           <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">bool</span> <span class="nf">isRightKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+<span class="n">bool</span> <span class="nf">isRightKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
   <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">kpr</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
   <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span>
           <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
@@ -391,29 +391,29 @@ $$
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/tsukuba_d5.png" height="155px" />
 		</div>
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/tsukuba_d7.png" height="155px" />
 		</div>
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/tsukuba_d.jpg" height="155px" />
 		</div>
 		
 	
-	<div class="imgcap">The first three images are the disparity maps generating using ORB matching. <b>(a)</b> window: 5x5 <b>(b)</b> window: 11x11 <b>(c)</b> window: 15x15 <b>(d)</b> Ground truth disparity map.</div>
-	<br />
 </div>
+
+<div class="imgcap">The first three images are the disparity maps generating using ORB matching. <b>(a)</b> window: 5x5 <b>(b)</b> window: 11x11 <b>(c)</b> window: 15x15 <b>(d)</b> Ground truth disparity map.</div>
 
 <p><strong>Tsukuba Stereo Pair.</strong> The images shown above are the results of ORB-based disparity matching. As it is clearly seen the results are not as good as the ground truth but it is good enough for local window-based matcher. It can be clearly seen that the rods/support of the lamp is not correctly matched and the tripod stand behind is also not properly depicted. But the overall structure/shape of the scene is retained to a fair extent. Also the effect of window-size can be seen. The first image is a bit noisy due to a lesser window-size whereas the the other two are a bit smoother and patchy because of a greater window-size.</p>
 
@@ -428,22 +428,22 @@ $$
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/right6.jpg" height="150px" />
 		</div>
 		
 	
 		
-		<div style="display:inline-block; margin-left:10px;">
+		<div style="display:inline-block;">
 		
 			<img src="../../assets/images/blog/disparity_orb/kgp-disp6.png" height="150px" />
 		</div>
 		
 	
-	<div class="imgcap">This data set was taken in the campus of IIT Kharagpur. A pair of Logitech C920s were used -- you can see the lens distortion is high. <b>(a)</b> Left image <b>(b)</b> Right image <b>(c)</b> Disparity map</div>
-	<br />
 </div>
+
+<div class="imgcap">This data set was taken in the campus of IIT Kharagpur. A pair of Logitech C920s were used -- you can see the lens distortion is high. <b>(a)</b> Left image <b>(b)</b> Right image <b>(c)</b> Disparity map</div>
 
 <p><strong>IIT KGP Dataset.</strong> This is an outdoor data set. The above stereo pair was collected using two Logitech C920s. Although the disparity map looks fair but there are issues – disparities for the ground plane is not smooth enough. The 3D reconstruction would yield a rough ground plane which is not good if someone is using stereo for obstacle avoidance. This is one of the drawbacks of local methods for generating dense disparity maps.</p>
 
@@ -454,11 +454,11 @@ $$
     </section>
 </article>
 <footer id="post-meta" class="clearfix">
-    <a href="http://facebook.com/Sourish69">
+    <a href="http://facebook.com/sweetnsourish">
         <img class="avatar" src="/assets/images/avatar.png">
         <div>
             <span class="dark">Sourish Ghosh</span>
-            <span>Undergraduate @ IIT Kharagpur</span>
+            <span>Dare Mighty Things</span>
         </div>
     </a>
 

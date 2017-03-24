@@ -2,9 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>Sourish Ghosh</title>
-    <description>Undergraduate @ IIT Kharagpur</description>
-    <link>http://localhost:4000</link>
-    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Dare Mighty Things</description>
+    <link>http://sourishghosh.com</link>
+    <atom:link href="http://sourishghosh.com/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Dense 3D Reconstruction from Stereo (using LIBELAS)</title>
+        
+        
+          <description>An article on dense 3D reconstruction using LIBELAS and transforming point clouds</description>
+        
+        <pubDate>Fri, 24 Mar 2017 05:30:00 +0530</pubDate>
+        <link>http://sourishghosh.com/2017/dense-reconstruction-from-stereo/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2017/dense-reconstruction-from-stereo/</guid>
+      </item>
     
       <item>
         <title>Generating Dense Disparity Maps using ORB Descriptors</title>
@@ -13,8 +24,8 @@
           <description>Article on generating dense disparity maps using ORB descriptors in C++/OpenCV</description>
         
         <pubDate>Mon, 31 Oct 2016 15:30:00 +0530</pubDate>
-        <link>http://localhost:4000/2016/dense-disparity-maps-orb-descriptors/</link>
-        <guid isPermaLink="true">http://localhost:4000/2016/dense-disparity-maps-orb-descriptors/</guid>
+        <link>http://sourishghosh.com/2016/dense-disparity-maps-orb-descriptors/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2016/dense-disparity-maps-orb-descriptors/</guid>
       </item>
     
       <item>
@@ -24,8 +35,8 @@
           <description>Stereo camera calibration tool/tutorial</description>
         
         <pubDate>Fri, 09 Sep 2016 15:30:00 +0530</pubDate>
-        <link>http://localhost:4000/2016/stereo-calibration-cpp-opencv/</link>
-        <guid isPermaLink="true">http://localhost:4000/2016/stereo-calibration-cpp-opencv/</guid>
+        <link>http://sourishghosh.com/2016/stereo-calibration-cpp-opencv/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2016/stereo-calibration-cpp-opencv/</guid>
       </item>
     
       <item>
@@ -35,8 +46,8 @@
           <description>Closed form solution of fundamental matrix, given camera matrices</description>
         
         <pubDate>Mon, 05 Sep 2016 15:30:00 +0530</pubDate>
-        <link>http://localhost:4000/2016/fundamental-matrix-from-camera-matrices/</link>
-        <guid isPermaLink="true">http://localhost:4000/2016/fundamental-matrix-from-camera-matrices/</guid>
+        <link>http://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/</guid>
       </item>
     
       <item>
@@ -46,8 +57,8 @@
           <description>Tool to calibrate intrinsics/extrinsics of cameras efficiently</description>
         
         <pubDate>Sun, 04 Sep 2016 15:30:00 +0530</pubDate>
-        <link>http://localhost:4000/2016/camera-calibration-cpp-opencv/</link>
-        <guid isPermaLink="true">http://localhost:4000/2016/camera-calibration-cpp-opencv/</guid>
+        <link>http://sourishghosh.com/2016/camera-calibration-cpp-opencv/</link>
+        <guid isPermaLink="true">http://sourishghosh.com/2016/camera-calibration-cpp-opencv/</guid>
       </item>
     
   </channel>

@@ -183,7 +183,7 @@ a,
 	transition: all 0.15s ease;
 }
 
-ul 	{ margin:0; padding:0; }
+ul 	{ margin-left:30px; margin-bottom: 20px; padding:0; }
 li	{ list-style-type:circle; list-style-position:inside; }
 
 /* Line Height */
