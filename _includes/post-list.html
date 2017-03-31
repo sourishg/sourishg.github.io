@@ -1,4 +1,4 @@
-<ul id="post-list">
+<ul id="post-list" style="margin-left: 0;">
     {% for post in paginator.posts %}
         <li>
             <a href="{{ site.baseurl }}{{ post.url | remove_first: '/' }}"><aside class="dates">{{ post.date | date:"%b %d" }}</aside></a>
