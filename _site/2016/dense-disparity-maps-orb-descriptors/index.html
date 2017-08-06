@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Sourish Ghosh">
+  <meta name="description" content="Article on generating dense disparity maps using ORB descriptors in C++/OpenCV">
+  <meta name="keywords" content="computervision,disparitymaps,orb,opencv,cpp,stereovision">
+  <!-- Social: Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="sourish_gh">
+  <meta name="twitter:title" content="Generating Dense Disparity Maps using ORB Descriptors">
+  <meta name="twitter:description" content="Article on generating dense disparity maps using ORB descriptors in C++/OpenCV">
+  <!-- Social: Facebook / Open Graph -->
+  <meta property="og:title" content="Generating Dense Disparity Maps using ORB Descriptors" />
+  <meta property="og:site_name" content="Sourish Ghosh" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Article on generating dense disparity maps using ORB descriptors in C++/OpenCV" />
+  
+    <title>Sourish Ghosh - Generating Dense Disparity Maps using ORB Descriptors</title>
+  
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="alternate" type="application/rss+xml" title="My Blog" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/css/highlight.css">
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-82908038-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+</head>
+<body>
+
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.7";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));</script>
+
+  <nav class="main-nav">
+    
+        <a href="/"> <span class="arrow">←</span> Home </a>
+    
+
+    
+        
+            <a href="/about">About </a>
+        
+    
+    <a class="cta" href="/feed.xml">Subscribe</a>
+</nav>
+
+
+  
+
+  <section id="wrapper" class="">
+    <style TYPE="text/css">
+code.has-jax {font: inherit; font-size: 100%; background: inherit; border: inherit;}
+</style>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // removed 'code' entry
+    }
+});
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<article class="post">
+    <header>
+        <h1>Generating Dense Disparity Maps using ORB Descriptors</h1>
+        <h2 class="headline">October 31, 2016</h2>
+    </header>
+    <section id="post-body">
+        <h1 id="introduction">Introduction</h1>
+
+<p><strong>Disparity Maps.</strong> A disparity map, often referred to as a <em>depth map</em>, is an image which contains depth information of every pixel stored in it. The term disparity in stereo vision refers to the apparent shift in pixel or motion in a pair of stereo images. Now a quick experiment to verify this would be to put an object (say a pencil) in front of your eyes. Observe the object with the right eye closed, and then at the same time quickly open your left eye and close your right eye. You would notice a shift in the object, this is what disparity basically means. Another thing you’ll notice is that objects far from your eyes shift less, and objects nearer shift more! This proves that disparity and depth have an inverse relationship. In this small experiment your eyes act as stereo camera system. In fact depth and disparity are related by the following equation</p>
+
+<center>
+$$
+x - x' = \frac{fB}{Z}
+$$
+</center>
+
+<p>where $x$ and $x’$ are the x-coordinate of a point in the left image and right image respectively of a rectified stereo image pair. $f$ is the focal length of the camera, $B$ is the baseline, and $Z$ is the depth of that point in 3D space.</p>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_l.png" height="200px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_r.png" height="200px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_d.jpg" height="200px" />
+		</div>
+		
+	
+</div>
+
+<div class="imgcap">This is the famous Tsukuba example from the Middlebury dataset. The first two images are the left and right images of a rectified stereo setup. The third image is the ground truth disparity map constructed from the left image.</div>
+
+<p>The disparity map shown in the above example is a grayscale image. Pixels which are colored white depict high disparity (low depth) and pixels which are coloured dark indicate low disparity (more depth). Generating accurate dense disparity maps is an active research area in computer vision. The <a href="http://vision.middlebury.edu/stereo/eval3/">Middlebury stereo evaluation</a> dataset shows the current best methods for computing dense disparity maps. It is to be noted that most of the methods from that list are global methods which formulate a global optimization problem and tries to minimize a cost or energy. These methods take significant amount of computation time and power and may not be useful for real time systems, although they tend to be really accurate. In this article a local method for computing disparity maps is presented.</p>
+
+<p><strong>ORB Descriptors.</strong> ORB which stands for Oriented FAST and Rotated BRIEF is an efficient feature detection algorithm designed by Rublee et al. Their paper, <a href="http://www.vision.cs.chubu.ac.jp/CV-R/pdf/Rublee_iccv2011.pdf">ORB: an efficient alternative to SIFT or SURF</a>, is widely used by the computer vision community for various tasks. ORB basically finds a number of key points in an image and computes their descriptors to be matched in another image which may be rotated or scaled. In our case all the pixels in our image would be key points i.e. we will manually set all pixels <code class="highlighter-rouge">(x, y)</code> as key points by calling the OpenCV key point constructor as <code class="highlighter-rouge">KeyPoint(x, y, 1)</code> where <code class="highlighter-rouge">1</code> is the diameter of the key point. Once all the key points are set, a descriptor for each key point is computed. These descriptors are a <code class="highlighter-rouge">32x1</code> integer vector representing each pixel. To find the point correspondences, a window based descriptor matching method is implemented.</p>
+
+<h1 id="stereo-calibration-and-rectification">Stereo Calibration and Rectification</h1>
+
+<p>Before proceeding to generate a dense disparity map, it is required to <a href="http://sourishghosh.com/2016/stereo-calibration-cpp-opencv/">calibrate a pair of stereo cameras</a> and rectify the stereo images so that the epipolar lines become horizontal scan lines.</p>
+
+<h1 id="epipolar-matching">Epipolar Matching</h1>
+
+<p>The epipolar constraint states that the correspondence of any point in one image is bound to lie on a particular line, called the epipolar line, in the other image. For rectified images these lines become horizontal and are called scan lines. A square window (target window) is slid over the epipolar line and the <a href="https://en.wikipedia.org/wiki/Sum_of_absolute_differences">sum of the absolute differences</a> (SAD) of each descriptor between the target window and the current window is computed. Among all such target windows the one with the minimum cost is chosen and the center of that window is the corresponding pixel. Note that, intensity differences are not being calculated for each pixel, instead the L1 norm of the difference vector of orb descriptors will be computed.</p>
+
+<p><strong>Cost Function.</strong> Since the epipolar are horizontal scan lines, we don’t have to worry about the y-coordinate. Let $C(x,d)$ be the cost of a pixel in the left image having disparity $d$. A pixel having disparity $d$ means the corresponding pixel in the right image has its x-coordinate as $x-d$. Then the best disparity $d_x$ is selected using a winner-take-all (WTA) scheme.</p>
+
+<script type="math/tex; mode=display">d_x = \underset{d\in D_x}{\arg\min}\ C(x,d)</script>
+
+<p>where $D_x = [0,d_{\max}-1]$ is the set of possible disparity values. The cost function $C(x,d)$ is defined as follows</p>
+
+<script type="math/tex; mode=display">C(x,d) = \sum_{(i,j)\in W(x)} \left|D_1(i,j) - D_2(i-d,j)\right|</script>
+
+<p>where $W(x)$ is the window around the pixel $x$, $D_1(i,j)$ is the descriptor for the pixel $(i,j)$ in the left image and similarly $D_2$ is the descriptor for the corresponding pixel in the right image.</p>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/epi-left.png" height="200px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/epi-right.png" height="200px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/epipolar_cost.png" height="200px" />
+		</div>
+		
+	
+</div>
+
+<div class="imgcap"><b>(a)</b> Left image with points marked whose correspondence is to be searched in the right image. <b>(b)</b> Right image with the correspondences found along epipolar lines. <b>(c)</b> Plot of cost vs disparity along the epipolar line. The disparity for which the cost is minimum is selected.</div>
+
+<p>The cost graph shown above depicts a single minimum. This indicates a high confidence match. In some cases there might be multiple minima, which usually results in low confidence incorrect matches. This usually occurs in textureless regions. Why? Think about it!</p>
+
+<p><strong>Left-Right Correspondence Check.</strong> This technique is used to do away with matching errors, especially in occluded regions. The disparity for pixel $(x,y)$ in the left image is first determined, say it is $d_1$. Then the disparity $d_2$ for pixel $(x-d_1,y)$ in the right image is calculated by drawing its epipolar line in the left image. The match is determined as valid/confident if $d_1$ and $d_2$ are almost equal i.e. if</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\left|d_1 - d_2\right| < \delta %]]></script>
+
+<p>where $\delta$ is some threshold. Usually $\delta &lt; 5$. The left-right correspondence check is implemented while generating the dense disparity map.</p>
+
+<h2 id="epipolar-matching-copencv-implementation">Epipolar matching: C++/OpenCV implementation</h2>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="cp">#include &lt;iostream&gt;
+#include &lt;opencv2/opencv.hpp&gt;
+#include &lt;opencv2/features2d/features2d.hpp&gt;
+#include &lt;fstream&gt;
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">cv</span><span class="p">;</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">Mat</span> <span class="n">img_left</span><span class="p">,</span> <span class="n">img_right</span><span class="p">,</span> <span class="n">img_left_disp</span><span class="p">,</span> <span class="n">img_right_disp</span><span class="p">;</span>
+<span class="n">Mat</span> <span class="n">img_left_desc</span><span class="p">,</span> <span class="n">img_right_desc</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span> <span class="n">KeyPoint</span> <span class="o">&gt;</span> <span class="n">kpl</span><span class="p">,</span> <span class="n">kpr</span><span class="p">;</span></code></pre></figure>
+
+<p>Declare all necessary variables. <code class="highlighter-rouge">img_left</code> and <code class="highlighter-rouge">img_right</code> stores the rectified stereo images. <code class="highlighter-rouge">img_left_desc</code> and <code class="highlighter-rouge">img_right_desc</code> stores the descriptor values of all the key points. <code class="highlighter-rouge">kpl</code> and <code class="highlighter-rouge">kpr</code> stores the left and right image key points respectively.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">bool</span> <span class="nf">isLeftKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span>
+          <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">bool</span> <span class="nf">isRightKeyPoint</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">kpr</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span>
+          <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">kpr</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Create two helper functions <code class="highlighter-rouge">isLeftKeyPoint</code> and <code class="highlighter-rouge">isRightKeyPoint</code> to check if pixel $(i,j)$ is a valid key point.</p>
+
+<p><strong>Note:</strong> Not all pixels are valid key points i.e. descriptor values do not exist for them. These are pixels which are close to the edge of the image.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">cacheDescriptorVals</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">OrbDescriptorExtractor</span> <span class="n">extractor</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">img_left</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">img_left</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">kpl</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">KeyPoint</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">));</span>
+      <span class="n">kpr</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">KeyPoint</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">extractor</span><span class="p">.</span><span class="n">compute</span><span class="p">(</span><span class="n">img_left</span><span class="p">,</span> <span class="n">kpl</span><span class="p">,</span> <span class="n">img_left_desc</span><span class="p">);</span>
+  <span class="n">extractor</span><span class="p">.</span><span class="n">compute</span><span class="p">(</span><span class="n">img_right</span><span class="p">,</span> <span class="n">kpr</span><span class="p">,</span> <span class="n">img_right_desc</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Precompute descriptor values for all valid key points (both left and right) using <code class="highlighter-rouge">OrbDescriptorExtractor</code>. We manually set key points as <code class="highlighter-rouge">KeyPoint(i, j, 1)</code> because we require descriptors for all pixels. If we let ORB compute key points, only a sparse set of key points will be returned.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">long</span> <span class="nf">costF</span><span class="p">(</span><span class="k">const</span> <span class="n">Mat</span><span class="o">&amp;</span> <span class="n">left</span><span class="p">,</span> <span class="k">const</span> <span class="n">Mat</span><span class="o">&amp;</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">long</span> <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cost</span> <span class="o">+=</span> <span class="n">abs</span><span class="p">(</span><span class="n">left</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="n">right</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">cost</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Define a cost function <code class="highlighter-rouge">costF</code> to compute the L1 norm of two descriptors. Here <code class="highlighter-rouge">left</code> and <code class="highlighter-rouge">right</code> are two descriptors of a left and right image pixel respectively. Since descriptors are <code class="highlighter-rouge">32x1</code> vectors we sum the absolute value of their term by term difference to find the cost.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="nf">getCorresPoint</span><span class="p">(</span><span class="n">Point</span> <span class="n">p</span><span class="p">,</span> <span class="n">Mat</span><span class="o">&amp;</span> <span class="n">img</span><span class="p">,</span> <span class="kt">int</span> <span class="n">ndisp</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">ofstream</span> <span class="n">mfile</span><span class="p">;</span>
+  <span class="n">mfile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">"cost.txt"</span><span class="p">);</span>
+  <span class="kt">int</span> <span class="n">w</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">minCost</span> <span class="o">=</span> <span class="mf">1e9</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">chosen_i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">x0r</span> <span class="o">=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">y0r</span> <span class="o">=</span> <span class="n">kpr</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">ynr</span> <span class="o">=</span> <span class="n">kpr</span><span class="p">[</span><span class="n">kpr</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">x0l</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">y0l</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">ynl</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">kpl</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="o">-</span><span class="n">ndisp</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">long</span> <span class="n">cost</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="o">-</span><span class="n">w</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="n">w</span><span class="p">;</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">;</span> <span class="n">k</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">isLeftKeyPoint</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">k</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">isRightKeyPoint</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">k</span><span class="p">))</span>
+          <span class="k">continue</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">idxl</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">j</span><span class="o">-</span><span class="n">x0l</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ynl</span><span class="o">-</span><span class="n">y0l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">k</span><span class="o">-</span><span class="n">y0l</span><span class="p">);</span>
+        <span class="kt">int</span> <span class="n">idxr</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">-</span><span class="n">x0r</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ynr</span><span class="o">-</span><span class="n">y0r</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">k</span><span class="o">-</span><span class="n">y0r</span><span class="p">);</span>
+        <span class="n">cost</span> <span class="o">+=</span> <span class="n">costF</span><span class="p">(</span><span class="n">img_left_desc</span><span class="p">.</span><span class="n">row</span><span class="p">(</span><span class="n">idxl</span><span class="p">),</span> <span class="n">img_right_desc</span><span class="p">.</span><span class="n">row</span><span class="p">(</span><span class="n">idxr</span><span class="p">));</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">cost</span> <span class="o">/</span> <span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">w</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">w</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
+    <span class="n">mfile</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">" "</span> <span class="o">&lt;&lt;</span> <span class="n">cost</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cost</span> <span class="o">&lt;</span> <span class="n">minCost</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">minCost</span> <span class="o">=</span> <span class="n">cost</span><span class="p">;</span>
+      <span class="n">chosen_i</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"minCost: "</span> <span class="o">&lt;&lt;</span> <span class="n">minCost</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">chosen_i</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p><code class="highlighter-rouge">getCorresPoint</code> returns the corresponding matched x-coordinate in the right image, given a point <code class="highlighter-rouge">p</code> in the left image. <code class="highlighter-rouge">w</code> is the size of the window to be slid across the epipolar line. <code class="highlighter-rouge">ndisp</code> is the maximum disparity / number of disparities for the stereo image pair. <code class="highlighter-rouge">chosen_i</code> is the current best pixel in the right image. <code class="highlighter-rouge">idxl</code> is the index of the descriptor of pixel $(x,y)$ in <code class="highlighter-rouge">img_left_desc</code>. It’s the same for <code class="highlighter-rouge">idxr</code>.</p>
+
+<script type="math/tex; mode=display">\text{idxl} = (x - x_{0l})(y_{nl} - y_{0l} + 1) + (y - y_{0l})</script>
+
+<p>$x_{0l}$ and $y_{0l}$ are the x and y coordinates of the first key point in <code class="highlighter-rouge">kpl</code> respectively. $y_{nl}$ is the y-coordinate of the last key point in <code class="highlighter-rouge">kpl</code>. The key point descriptors are stored in column major format, hence the formula above is used to access them.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">mouseClickLeft</span><span class="p">(</span><span class="kt">int</span> <span class="n">event</span><span class="p">,</span> <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="n">userdata</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">event</span> <span class="o">==</span> <span class="n">EVENT_LBUTTONDOWN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">isLeftKeyPoint</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">right_i</span> <span class="o">=</span> <span class="n">getCorresPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">img_right</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+    <span class="n">Scalar</span> <span class="n">color</span> <span class="o">=</span> <span class="n">Scalar</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span><span class="mi">255</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">circle</span><span class="p">(</span><span class="n">img_left_disp</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">circle</span><span class="p">(</span><span class="n">img_right_disp</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span><span class="n">right_i</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">line</span><span class="p">(</span><span class="n">img_right_disp</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="n">img_right</span><span class="p">.</span><span class="n">cols</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> 
+         <span class="n">color</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Left: "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="s">" Right: "</span> <span class="o">&lt;&lt;</span> <span class="n">right_i</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Create a callback function for a left click on the left image. This will trigger the <code class="highlighter-rouge">getCorresPoint</code> function for the clicked pixel $(x,y)$. Circles are drawn on both images to visually show the correspondences, the epipolar line is drawn too. Note that all the visualizations are done on <code class="highlighter-rouge">img_left_disp</code> and <code class="highlighter-rouge">img_right_disp</code>.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">img_left</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="n">img_right</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+  <span class="n">img_left_disp</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="n">img_right_disp</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+  <span class="n">cacheDescriptorVals</span><span class="p">();</span>
+  <span class="n">namedWindow</span><span class="p">(</span><span class="s">"IMG-LEFT"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">namedWindow</span><span class="p">(</span><span class="s">"IMG-RIGHT"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">setMouseCallback</span><span class="p">(</span><span class="s">"IMG-LEFT"</span><span class="p">,</span> <span class="n">mouseClickLeft</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+  <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="s">"IMG-LEFT"</span><span class="p">,</span> <span class="n">img_left_disp</span><span class="p">);</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="s">"IMG-RIGHT"</span><span class="p">,</span> <span class="n">img_right_disp</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Finally the main function takes two rectified images as input and calls all the necessary functions to implement the epipolar matching.</p>
+
+<blockquote>
+  <p><strong>Find the full code here</strong>: <a href="https://github.com/sourishg/disparity-map/blob/master/epipolar.cpp">https://github.com/sourishg/disparity-map/blob/master/epipolar.cpp</a></p>
+</blockquote>
+
+<h2 id="generating-dense-disparity-maps-copencv-implementation">Generating dense disparity maps: C++/OpenCV implementation</h2>
+
+<p>The idea is to extend the epipolar matching for all pixels in the left image. Hence much of the previous code is reused. The final output is a grayscale showing the various disparity levels of each pixel. If a pixel $(x,y)$ has disparity $d$, then the grayscale intensity of the corresponding pixel is $\frac{255 \times d}{d_{\max}}$.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">computeDisparityMapORB</span><span class="p">(</span><span class="kt">int</span> <span class="n">ndisp</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">img_disp</span> <span class="o">=</span> <span class="n">Mat</span><span class="p">(</span><span class="n">img_left</span><span class="p">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">img_left</span><span class="p">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">CV_8UC1</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+  <span class="kt">int</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">yn</span> <span class="o">=</span> <span class="n">kpl</span><span class="p">[</span><span class="n">kpl</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">].</span><span class="n">pt</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">img_left</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">img_left</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">j</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">isLeftKeyPoint</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">))</span>
+        <span class="k">continue</span><span class="p">;</span>
+      <span class="kt">int</span> <span class="n">right_i</span> <span class="o">=</span> <span class="n">getCorresPointRight</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="n">ndisp</span><span class="p">);</span>
+      <span class="c1">// left-right check
+</span>      <span class="kt">int</span> <span class="n">left_i</span> <span class="o">=</span> <span class="n">getCorresPointLeft</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">right_i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="n">ndisp</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">left_i</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="k">continue</span><span class="p">;</span>
+      <span class="kt">int</span> <span class="n">disparity</span> <span class="o">=</span> <span class="n">abs</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">right_i</span><span class="p">);</span>
+      <span class="n">img_disp</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="o">=</span> <span class="n">disparity</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.</span> <span class="o">/</span> <span class="n">ndisp</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This is a very simple function which makes use of <code class="highlighter-rouge">getCorresPointRight</code> and <code class="highlighter-rouge">getCorresPointLeft</code> to find the left and right disparity respectively. If the left-right correspondence check is passed for pixel $(i,j)$ then the corresponding grayscale intensity is set in the disparity image, otherwise it is coloured black.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">img_left</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">img_right</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">cacheDescriptorVals</span><span class="p">();</span>
+  <span class="n">computeDisparityMapORB</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+  <span class="c1">//namedWindow("IMG-LEFT", 1);
+</span>  <span class="c1">//namedWindow("IMG-RIGHT", 1);
+</span>  <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="s">"IMG-LEFT"</span><span class="p">,</span> <span class="n">img_left</span><span class="p">);</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="s">"IMG-RIGHT"</span><span class="p">,</span> <span class="n">img_right</span><span class="p">);</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="s">"IMG-DISP"</span><span class="p">,</span> <span class="n">img_disp</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">imwrite</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">img_disp</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>The main function caches the descriptor values and then calls the <code class="highlighter-rouge">computeDisparityMapORB</code> function to generate the dense disparity map.</p>
+
+<blockquote>
+  <p><strong>Find the full code here</strong>: <a href="https://github.com/sourishg/disparity-map/blob/master/disparity-orb.cpp">https://github.com/sourishg/disparity-map/blob/master/disparity-orb.cpp</a></p>
+</blockquote>
+
+<h1 id="results">Results</h1>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_d2.png" height="155px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_d5.png" height="155px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_d7.png" height="155px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/tsukuba_d.jpg" height="155px" />
+		</div>
+		
+	
+</div>
+
+<div class="imgcap">The first three images are the disparity maps generating using ORB matching. <b>(a)</b> window: 5x5 <b>(b)</b> window: 11x11 <b>(c)</b> window: 15x15 <b>(d)</b> Ground truth disparity map.</div>
+
+<p><strong>Tsukuba Stereo Pair.</strong> The images shown above are the results of ORB-based disparity matching. As it is clearly seen the results are not as good as the ground truth but it is good enough for local window-based matcher. It can be clearly seen that the rods/support of the lamp is not correctly matched and the tripod stand behind is also not properly depicted. But the overall structure/shape of the scene is retained to a fair extent. Also the effect of window-size can be seen. The first image is a bit noisy due to a lesser window-size whereas the the other two are a bit smoother and patchy because of a greater window-size.</p>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/left6.jpg" height="150px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/right6.jpg" height="150px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/disparity_orb/kgp-disp6.png" height="150px" />
+		</div>
+		
+	
+</div>
+
+<div class="imgcap">This data set was taken in the campus of IIT Kharagpur. A pair of Logitech C920s were used -- you can see the lens distortion is high. <b>(a)</b> Left image <b>(b)</b> Right image <b>(c)</b> Disparity map</div>
+
+<p><strong>IIT KGP Dataset.</strong> This is an outdoor data set. The above stereo pair was collected using two Logitech C920s. Although the disparity map looks fair but there are issues – disparities for the ground plane is not smooth enough. The 3D reconstruction would yield a rough ground plane which is not good if someone is using stereo for obstacle avoidance. This is one of the drawbacks of local methods for generating dense disparity maps.</p>
+
+<blockquote>
+  <p><strong>More tools here:</strong> <a href="https://github.com/sourishg/disparity-map">https://github.com/sourishg/disparity-map</a></p>
+</blockquote>
+
+    </section>
+</article>
+<footer id="post-meta" class="clearfix">
+    <a href="http://facebook.com/lordghosh">
+        <img class="avatar" src="/assets/images/avatar.png">
+        <div>
+            <span class="dark">Sourish Ghosh</span>
+            <span>Dare Mighty Things</span>
+        </div>
+    </a>
+
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http://sourishghosh.com/2016/dense-disparity-maps-orb-descriptors/ - Generating Dense Disparity Maps using ORB Descriptors by @sourish_gh"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+    </section>
+</footer>
+
+<div class="fb-like" data-href="/2016/dense-disparity-maps-orb-descriptors/" data-layout="standard" data-action="like" data-size="small" data-show-faces="false" data-share="true" style="margin-bottom: 25px;"></div>
+
+<!-- Disqus comments -->
+
+    <div class="archive readmore">
+        <h3>Comments</h3>
+        <section class="disqus">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'sourishghosh';
+        var disqus_developer = 0; // developer mode is on
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</section>
+    </div>
+
+
+<!-- Archive post list -->
+
+
+  </section>
+
+  <svg display="none" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+
+<symbol id="icon-rss" viewBox="0 0 1024 1024">
+<title>rss</title>
+<path class="path1" d="M122.88 122.88v121.19c362.803 0 656.896 294.195 656.896 656.998h121.293c0-429.773-348.416-778.189-778.189-778.189zM122.88 365.414v121.293c228.813 0 414.362 185.498 414.362 414.413h121.242c0-295.834-239.821-535.706-535.603-535.706zM239.053 668.621c-64.205 0-116.224 52.122-116.224 116.275s52.019 116.224 116.224 116.224 116.173-52.019 116.173-116.224-51.968-116.275-116.173-116.275z"></path>
+</symbol>
+
+<symbol id="icon-facebook" viewBox="0 0 1024 1024">
+<title>facebook</title>
+<path class="path1" d="M870.4 51.2h-716.8c-56.32 0-102.4 46.080-102.4 102.4v716.8c0 56.371 46.080 102.4 102.4 102.4h358.4v-358.4h-102.4v-126.72h102.4v-104.96c0-110.797 62.054-188.621 192.819-188.621l92.314 0.102v133.376h-61.286c-50.893 0-70.246 38.195-70.246 73.626v86.528h131.482l-29.082 126.669h-102.4v358.4h204.8c56.32 0 102.4-46.029 102.4-102.4v-716.8c0-56.32-46.080-102.4-102.4-102.4z"></path>
+</symbol>
+
+<symbol id="icon-twitter" viewBox="0 0 1024 1024">
+<title>twitter</title>
+<path class="path1" d="M886.579 319.795c0.41 8.294 0.563 16.691 0.563 24.986 0 255.488-194.406 549.99-549.888 549.99-109.21 0-210.739-32-296.294-86.886 15.155 1.792 30.515 2.714 46.080 2.714 90.624 0 173.926-30.925 240.026-82.688-84.531-1.587-155.955-57.395-180.531-134.195 11.776 2.202 23.91 3.379 36.352 3.379 17.664 0 34.765-2.304 50.944-6.707-88.422-17.818-155.034-95.898-155.034-189.594 0-0.819 0-1.587 0-2.406 26.061 14.49 55.91 23.194 87.552 24.218-51.866-34.714-86.016-93.798-86.016-160.922 0-35.379 9.523-68.608 26.214-97.178 95.283 116.992 237.773 193.894 398.387 201.984-3.277-14.182-4.966-28.877-4.966-44.083 0-106.701 86.477-193.178 193.229-193.178 55.603 0 105.83 23.398 141.107 60.979 43.981-8.704 85.35-24.781 122.726-46.899-14.438 45.107-45.107 82.995-84.992 106.906 39.117-4.71 76.288-15.002 111.002-30.413-25.907 38.81-58.675 72.806-96.461 99.994z"></path>
+</symbol>
+
+<symbol id="icon-github" viewBox="0 0 1024 1024">
+<title>github</title>
+<path class="path1" d="M674.816 579.021c-36.762 0-66.56 41.318-66.56 92.109 0 50.893 29.798 92.211 66.56 92.211s66.56-41.318 66.56-92.211c-0.051-50.79-29.798-92.109-66.56-92.109zM906.547 339.251c7.629-18.688 7.936-124.877-32.512-226.611 0 0-92.723 10.189-233.011 106.496-29.44-8.192-79.258-12.186-128.973-12.186-49.818 0-99.584 3.994-129.024 12.186-140.339-96.307-233.062-106.496-233.062-106.496-40.397 101.734-39.987 207.923-32.461 226.611-47.514 51.61-76.544 113.613-76.544 198.195 0 367.923 305.306 373.811 382.31 373.811 17.51 0 52.122 0.102 88.781 0.102 36.608 0 71.27-0.102 88.678-0.102 77.107 0 382.31-5.888 382.31-373.811 0-84.582-28.979-146.586-76.493-198.195zM513.434 866.048h-2.867c-193.075 0-343.501-22.989-343.501-210.688 0-45.005 15.872-86.682 53.606-121.293 62.822-57.702 169.216-27.187 289.894-27.187 0.512 0 1.024 0 1.485 0 0.512 0 0.922 0 1.382 0 120.678 0 227.123-30.515 289.997 27.187 37.632 34.611 53.504 76.288 53.504 121.293 0 187.699-150.374 210.688-343.501 210.688zM349.235 579.021c-36.762 0-66.56 41.318-66.56 92.109 0 50.893 29.798 92.211 66.56 92.211 36.813 0 66.611-41.318 66.611-92.211 0-50.79-29.798-92.109-66.611-92.109z"></path>
+</symbol>
+
+<symbol id="icon-youtube" viewBox="0 0 1024 1024">
+<title>youtube</title>
+<path class="path1" d="M512 117.76c-503.194 0-512 44.749-512 394.24s8.806 394.24 512 394.24 512-44.749 512-394.24-8.806-394.24-512-394.24zM676.096 529.101l-229.888 107.315c-20.122 9.318-36.608-1.126-36.608-23.347v-202.138c0-22.17 16.486-32.666 36.608-23.347l229.888 107.315c20.122 9.421 20.122 24.781 0 34.202z"></path>
+</symbol>
+
+<symbol id="icon-mail" viewBox="0 0 1024 1024">
+<title>mail</title>
+<path class="path1" d="M80.589 270.643c24.986 13.414 371.098 199.373 384 206.285s29.594 10.189 46.387 10.189c16.794 0 33.485-3.277 46.387-10.189s359.014-192.87 384-206.285c25.037-13.466 48.691-65.843 2.765-65.843h-866.253c-45.926 0-22.272 52.378 2.714 65.843zM952.986 383.437c-28.416 14.797-378.214 197.069-395.622 206.182s-29.594 10.189-46.387 10.189-28.979-1.075-46.387-10.189-365.21-191.437-393.626-206.234c-19.968-10.445-19.763 1.792-19.763 11.213s0 373.402 0 373.402c0 21.504 28.979 51.2 51.2 51.2h819.2c22.221 0 51.2-29.696 51.2-51.2 0 0 0-363.93 0-373.35s0.205-21.658-19.814-11.213z"></path>
+</symbol>
+
+<symbol id="icon-spotify" viewBox="0 0 1024 1024">
+<title>spotify</title>
+<path class="path1" d="M512 61.44c-248.883 0-450.56 201.626-450.56 450.56 0 248.781 201.677 450.56 450.56 450.56 248.934 0 450.509-201.728 450.509-450.56 0-248.883-201.523-450.56-450.509-450.56zM690.074 742.502c-8.858 0-15.053-3.379-21.555-7.322-60.877-36.915-136.294-56.269-218.010-56.269-41.677 0-86.682 4.966-133.632 14.592l-5.734 1.434c-5.939 1.434-12.032 3.021-16.691 3.021-18.995 0-33.843-14.746-33.843-33.587 0-19.098 10.752-32.614 28.774-35.994 56.115-12.8 108.954-19.046 161.382-19.046 94.976 0 179.866 22.016 252.467 65.485 12.442 7.27 20.275 15.667 20.275 34.202-0.051 18.483-15.002 33.485-33.434 33.485zM736.819 611.379c-10.598 0-17.562-4.045-23.706-7.629-109.722-65.075-273.050-86.682-407.603-50.842-2.253 0.666-4.301 1.28-6.144 1.894-5.069 1.587-9.779 3.174-16.435 3.174-22.118 0-40.090-18.074-40.090-40.346 0-21.453 11.213-36.454 31.437-42.189 51.866-14.234 100.557-23.654 170.65-23.654 113.254 0 223.078 28.416 309.146 79.923 15.667 8.96 22.784 21.197 22.784 39.475 0 22.221-17.971 40.192-40.038 40.192zM789.862 461.875c-9.984 0-16.128-2.406-25.344-7.373-74.394-44.646-190.464-71.219-310.733-71.219-62.669 0-119.603 6.912-169.267 20.326-1.69 0.41-3.277 0.87-5.018 1.382-5.274 1.587-11.878 3.482-18.688 3.482-26.419 0-47.053-20.89-47.053-47.565 0-23.194 13.005-40.909 34.816-47.36 59.955-17.715 128.973-26.675 205.107-26.675 137.114 0 267.571 30.464 357.939 83.507 16.998 9.677 25.344 24.32 25.344 44.646 0 26.266-20.685 46.848-47.104 46.848z"></path>
+</symbol>
+
+<symbol id="icon-instagram" viewBox="0 0 1024 1024">
+<title>instagram</title>
+<path class="path1" d="M870.4 51.2h-716.8c-56.32 0-102.4 46.080-102.4 102.4v716.8c0 56.371 46.080 102.4 102.4 102.4h716.8c56.32 0 102.4-46.029 102.4-102.4v-716.8c0-56.32-46.080-102.4-102.4-102.4zM511.181 794.778c156.621 0 283.546-127.027 283.546-283.597 0-17.306-2.202-33.997-5.274-50.381h80.947v369.459c0 19.558-15.872 35.328-35.482 35.328h-645.837c-19.61 0-35.482-15.77-35.482-35.328v-369.459h79.309c-3.123 16.384-5.325 33.075-5.325 50.381 0 156.621 127.027 283.597 283.597 283.597zM333.978 511.181c0-97.894 79.36-177.203 177.254-177.203 97.843 0 177.254 79.309 177.254 177.203s-79.411 177.254-177.254 177.254c-97.946 0-177.254-79.36-177.254-177.254zM834.918 307.2h-82.688c-19.558 0-35.43-15.974-35.43-35.43v-82.79c0-19.558 15.872-35.379 35.379-35.379h82.688c19.661 0 35.533 15.821 35.533 35.379v82.739c0 19.507-15.872 35.482-35.482 35.482z"></path>
+</symbol>
+
+<symbol id="icon-linkedin" viewBox="0 0 1024 1024">
+<title>linkedin</title>
+<path class="path1" d="M256 153.6c0 54.374-36.352 101.171-102.451 101.171-62.208 0-102.349-44.134-102.349-98.509 0-55.808 38.912-105.062 102.4-105.062s101.171 46.592 102.4 102.4zM51.2 972.8v-665.6h204.8v665.6h-204.8z"></path>
+<path class="path2" d="M358.4 534.733c0-79.104-2.611-145.203-5.222-202.291h184.013l9.114 88.218h3.891c25.907-41.523 89.395-102.4 195.686-102.4 129.638 0 226.918 86.784 226.918 273.51v381.030h-204.8v-351.283c0-81.613-31.078-143.872-102.4-143.872-54.374 0-81.613 44.032-95.898 80.333-5.222 13.005-6.502 31.13-6.502 49.306v365.517h-204.8v-438.067z"></path>
+</symbol>
+
+<symbol id="icon-google" viewBox="0 0 1024 1024">
+<title>google</title>
+<path class="path1" d="M522.2 438.8v175.6h290.4c-11.8 75.4-87.8 220.8-290.4 220.8-174.8 0-317.4-144.8-317.4-323.2s142.6-323.2 317.4-323.2c99.4 0 166 42.4 204 79l139-133.8c-89.2-83.6-204.8-134-343-134-283 0-512 229-512 512s229 512 512 512c295.4 0 491.6-207.8 491.6-500.2 0-33.6-3.6-59.2-8-84.8l-483.6-0.2z"></path>
+</symbol>
+
+<symbol id="icon-pinterest" viewBox="0 0 1024 1024">
+<title>pinterest</title>
+<path class="path1" d="M512 68.4c-245 0-443.6 198.6-443.6 443.6 0 188 117 348.4 282 413-3.8-35-7.4-89 1.6-127.2 8-34.6 52-220.4 52-220.4s-13.2-26.6-13.2-65.8c0-61.6 35.8-107.8 80.2-107.8 37.8 0 56.2 28.4 56.2 62.4 0 38-24.2 95-36.8 147.6-10.6 44.2 22 80.2 65.6 80.2 78.8 0 139.4-83.2 139.4-203.2 0-106.2-76.4-180.4-185.2-180.4-126.2 0-200.2 94.6-200.2 192.6 0 38.2 14.6 79 33 101.2 3.6 4.4 4.2 8.2 3 12.8-3.4 14-10.8 44.2-12.4 50.4-2 8.2-6.4 9.8-14.8 6-55.4-25.8-90-106.8-90-171.8 0-140 101.6-268.4 293-268.4 153.8 0 273.4 109.6 273.4 256.2 0 152.8-96.4 276-230.2 276-45 0-87.2-23.4-101.6-51 0 0-22.2 84.6-27.6 105.4-10 38.6-37 86.8-55.2 116.2 41.6 12.8 85.6 19.8 131.4 19.8 245 0 443.6-198.6 443.6-443.6 0-245.2-198.6-443.8-443.6-443.8z"></path>
+</symbol>
+
+<symbol id="icon-medium" viewBox="0 0 179.2 179.2">
+<title>medium</title>
+<path transform="scale(0.1,-0.1) translate(0,-1536)" d="M597 1115v-1173q0 -25 -12.5 -42.5t-36.5 -17.5q-17 0 -33 8l-465 233q-21 10 -35.5 33.5t-14.5 46.5v1140q0 20 10 34t29 14q14 0 44 -15l511 -256q3 -3 3 -5zM661 1014l534 -866l-534 266v600zM1792 996v-1054q0 -25 -14 -40.5t-38 -15.5t-47 13l-441 220zM1789 1116 q0 -3 -256.5 -419.5t-300.5 -487.5l-390 634l324 527q17 28 52 28q14 0 26 -6l541 -270q4 -2 4 -6z" />
+</symbol>
+
+<symbol id="icon-vimeo" viewBox="0 0 21 21">
+<title>vimeo</title>
+<path d="M17.811,2.018c2.017,0.053,3.026,1.198,3.036,3.438c0,0.147-0.005,0.3-0.013,0.457c-0.089,1.899-1.502,4.486-4.245,7.76 c-2.829,3.43-5.229,5.147-7.2,5.156c-1.226,0-2.244-1.05-3.061-3.151l-0.858-2.88L4.622,9.922C3.997,7.838,3.329,6.798,2.616,6.798 c-0.156,0-0.697,0.304-1.626,0.91L0,6.537l1.536-1.276l1.511-1.263C4.4,2.914,5.429,2.328,6.135,2.241 c0.094-0.01,0.188-0.013,0.284-0.013c1.449,0,2.354,1.041,2.709,3.124C9.326,6.54,9.49,7.506,9.623,8.248 C9.752,8.992,9.86,9.51,9.946,9.805c0.479,1.97,0.995,2.96,1.55,2.968c0.426,0,1.082-0.642,1.968-1.926 c0.866-1.319,1.332-2.296,1.392-2.932c0.019-0.129,0.026-0.25,0.026-0.362c0-0.861-0.474-1.29-1.418-1.29 c-0.479,0-0.99,0.102-1.537,0.299c0.98-3.021,2.864-4.534,5.65-4.544C17.655,2.018,17.732,2.018,17.811,2.018z"/>
+</symbol>
+
+</defs>
+</svg>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/highlight.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Sourish Ghosh">
+  <meta name="description" content="An article on dense 3D reconstruction using LIBELAS and transforming point clouds to different reference frames">
+  <meta name="keywords" content="computervision,3dreconstruction,stereovision,disparitymaps">
+  <!-- Social: Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="sourish_gh">
+  <meta name="twitter:title" content="Dense 3D Reconstruction from Stereo (using LIBELAS)">
+  <meta name="twitter:description" content="An article on dense 3D reconstruction using LIBELAS and transforming point clouds to different reference frames">
+  <!-- Social: Facebook / Open Graph -->
+  <meta property="og:title" content="Dense 3D Reconstruction from Stereo (using LIBELAS)" />
+  <meta property="og:site_name" content="Sourish Ghosh" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="An article on dense 3D reconstruction using LIBELAS and transforming point clouds to different reference frames" />
+  
+    <title>Sourish Ghosh - Dense 3D Reconstruction from Stereo (using LIBELAS)</title>
+  
+  <link rel="shortcut icon" href="/assets/images/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="alternate" type="application/rss+xml" title="My Blog" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/css/highlight.css">
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-82908038-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+</head>
+<body>
+
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.7";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));</script>
+
+  <nav class="main-nav">
+    
+        <a href="/"> <span class="arrow">←</span> Home </a>
+    
+
+    
+        
+            <a href="/about">About </a>
+        
+    
+    <a class="cta" href="/feed.xml">Subscribe</a>
+</nav>
+
+
+  
+
+  <section id="wrapper" class="">
+    <style TYPE="text/css">
+code.has-jax {font: inherit; font-size: 100%; background: inherit; border: inherit;}
+</style>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // removed 'code' entry
+    }
+});
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<article class="post">
+    <header>
+        <h1>Dense 3D Reconstruction from Stereo (using LIBELAS)</h1>
+        <h2 class="headline">March 24, 2017</h2>
+    </header>
+    <section id="post-body">
+        <h1 id="introduction">Introduction</h1>
+
+<p>This article is a tutorial of the code implemented in the repository <a href="https://github.com/sourishg/stereo-dense-reconstruction">stereo-dense-reconstruction</a>. The theory is not covered in detail, so some basic reading on the topic is suggested before one delves into the code. This ROS package computes dense disparity maps using LIBELAS and converts them into 3D point clouds. The method for generation of disparity maps can be changed based on user preferences. I had written an article on <a href="http://sourishghosh.com/2016/dense-disparity-maps-orb-descriptors/">generating dense disparity maps using ORB descriptors</a> earlier. That method can be implemented real time by using optimized code and parallelization.</p>
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/I45hpXPDTZg?rel=0&amp;showinfo=0" frameborder="0" allowfullscreen=""></iframe>
+</center>
+
+<p>An overview of the working code can be seen in the above video. Generation of dense disparity maps and the resulting point clouds is shown. The visualizations are shown in <code class="highlighter-rouge">rviz</code>. Towards the end of the video, point cloud transformation is demonstrated using <code class="highlighter-rouge">rqt_reconfigure</code>.</p>
+
+<h1 id="stereo-calibration">Stereo Calibration</h1>
+
+<p>A calibrated pair of stereo cameras is required for dense reconstruction. The calibration file is stored as a YAML file containing the following information about the stereo cameras:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">K1</code></td>
+      <td>Intrinsic matrix of left camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">K2</code></td>
+      <td>Intrinsic matrix of right camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">D1</code></td>
+      <td>Distortion coefficients of left camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">D2</code></td>
+      <td>Distortion coefficients of right camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">R</code></td>
+      <td>Rotation matrix from left camera to right camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">T</code></td>
+      <td>Translation vector from left camera to right camera</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">XR</code></td>
+      <td>Rotation matrix for point cloud transformation</td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">XT</code></td>
+      <td>Translation matrix for point cloud transformation</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>See a <a href="https://github.com/sourishg/stereo-dense-reconstruction/blob/master/calibration_files/cam_stereo_agv_jackal.yml">sample calibration file</a>. A YAML calibration file can be generated by using this <a href="https://github.com/sourishg/stereo-calibration">stereo camera calibration tool</a>. For more information see this detailed <a href="http://sourishghosh.com/2016/stereo-calibration-cpp-opencv/">tutorial on stereo camera calibration</a>.</p>
+
+<p>Although we require only the matrices mentioned in the above table, the sample calibration file contains other matrices found after rectification (<em>e.g.</em>, <code class="highlighter-rouge">P1</code>, <code class="highlighter-rouge">P2</code>, <code class="highlighter-rouge">Q</code> etc.). These matrices are found by OpenCV’s <code class="highlighter-rouge">stereoRectify</code> function and they depend on the output image resolution of the rectified stereo images. Hence it is better to run <code class="highlighter-rouge">stereoRectify</code> online than storing those matrices in a calibration file. This gives us the flexibility to work at different image resolutions.</p>
+
+<p>The use of <code class="highlighter-rouge">XR</code> and <code class="highlighter-rouge">XT</code> matrices is explained later. For initial values <code class="highlighter-rouge">XR</code> can be set as the $3 \times 3$ identity matrix while <code class="highlighter-rouge">XT</code> can be set as the $3 \times 1$ zero vector.</p>
+
+<h1 id="stereo-rectification">Stereo Rectification</h1>
+
+<p>Disparity maps are generated from rectified stereo images. The raw stereo images should be published by a topic which publishes messages of the type <code class="highlighter-rouge">sensor_msgs/Image</code>. The code for rectification of stereo images is implemented in <a href="https://github.com/sourishg/stereo-dense-reconstruction/blob/master/src/stereo_rectify.cpp"><code class="highlighter-rouge">src/stereo_rectify.cpp</code></a>.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">Mat</span> <span class="n">XR</span><span class="p">,</span> <span class="n">XT</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">P1</span><span class="p">,</span> <span class="n">P2</span><span class="p">;</span>
+<span class="n">Mat</span> <span class="n">R1</span><span class="p">,</span> <span class="n">R2</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">D1</span><span class="p">,</span> <span class="n">D2</span><span class="p">,</span> <span class="n">R</span><span class="p">;</span>
+<span class="n">Vec3d</span> <span class="n">T</span><span class="p">;</span>
+<span class="n">Mat</span> <span class="n">lmapx</span><span class="p">,</span> <span class="n">lmapy</span><span class="p">,</span> <span class="n">rmapx</span><span class="p">,</span> <span class="n">rmapy</span><span class="p">;</span>
+<span class="n">FileStorage</span> <span class="n">calib_file</span><span class="p">;</span>
+<span class="n">Size</span> <span class="n">out_img_size</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">);</span>
+<span class="n">Size</span> <span class="n">calib_img_size</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">480</span><span class="p">);</span>
+
+<span class="n">image_transport</span><span class="o">::</span><span class="n">Publisher</span> <span class="n">pub_img_left</span><span class="p">;</span>
+<span class="n">image_transport</span><span class="o">::</span><span class="n">Publisher</span> <span class="n">pub_img_right</span><span class="p">;</span></code></pre></figure>
+
+<p>Declare all the calibration matrices as <code class="highlighter-rouge">Mat</code> variables. <code class="highlighter-rouge">calib_img_size</code> is the resolution of the images used for stereo calibration. <code class="highlighter-rouge">out_img_size</code> is the output resolution of the rectified images. This can be set at our own will. Lower resolution images require less computation time for dense reconstruction. <code class="highlighter-rouge">pub_img_left</code> and <code class="highlighter-rouge">pub_img_right</code> are the publishers for the rectified images. The output images are published as a <code class="highlighter-rouge">sensor_msgs/CompressedImage</code> message. This is helpful while collecting large datasets, so that file size is reduced.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">undistortRectifyImage</span><span class="p">(</span><span class="n">Mat</span><span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="n">Mat</span><span class="o">&amp;</span> <span class="n">dst</span><span class="p">,</span> <span class="n">FileStorage</span><span class="o">&amp;</span> <span class="n">calib_file</span><span class="p">,</span> <span class="kt">int</span>
+<span class="n">left</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">left</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">remap</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">lmapx</span><span class="p">,</span> <span class="n">lmapy</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="n">INTER_LINEAR</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">remap</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">rmapx</span><span class="p">,</span> <span class="n">rmapy</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="n">INTER_LINEAR</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This function undistorts and rectifies the <code class="highlighter-rouge">src</code> image into <code class="highlighter-rouge">dst</code>. The homographic mappings <code class="highlighter-rouge">lmapx</code>, <code class="highlighter-rouge">lmapy</code>, <code class="highlighter-rouge">rmapx</code>, and <code class="highlighter-rouge">rmapy</code> are found from OpenCV’s <code class="highlighter-rouge">initUndistortRectifyMap</code> function.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">findRectificationMap</span><span class="p">(</span><span class="n">FileStorage</span><span class="o">&amp;</span> <span class="n">calib_file</span><span class="p">,</span> <span class="n">Size</span> <span class="n">finalSize</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Rect</span> <span class="n">validRoi</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+  <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"starting rectification"</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="n">stereoRectify</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">D1</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">D2</span><span class="p">,</span> <span class="n">calib_img_size</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">Mat</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">R1</span><span class="p">,</span> <span class="n">R2</span><span class="p">,</span> <span class="n">P1</span><span class="p">,</span> <span class="n">P2</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span>
+                <span class="n">CV_CALIB_ZERO_DISPARITY</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">finalSize</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">validRoi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="o">&amp;</span><span class="n">validRoi</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"done rectification"</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">initUndistortRectifyMap</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">D1</span><span class="p">,</span> <span class="n">R1</span><span class="p">,</span> <span class="n">P1</span><span class="p">,</span> <span class="n">finalSize</span><span class="p">,</span> <span class="n">CV_32F</span><span class="p">,</span> <span class="n">lmapx</span><span class="p">,</span>
+<span class="n">lmapy</span><span class="p">);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">initUndistortRectifyMap</span><span class="p">(</span><span class="n">K2</span><span class="p">,</span> <span class="n">D2</span><span class="p">,</span> <span class="n">R2</span><span class="p">,</span> <span class="n">P2</span><span class="p">,</span> <span class="n">finalSize</span><span class="p">,</span> <span class="n">CV_32F</span><span class="p">,</span> <span class="n">rmapx</span><span class="p">,</span>
+<span class="n">rmapy</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This function computes all the projection matrices and the rectification transformations using the <code class="highlighter-rouge">stereoRectify</code> and <code class="highlighter-rouge">initUndistortRectifyMap</code> functions respectively.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">void</span> <span class="nf">imgLeftCallback</span><span class="p">(</span><span class="k">const</span> <span class="n">sensor_msgs</span><span class="o">::</span><span class="n">ImageConstPtr</span><span class="o">&amp;</span> <span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">try</span>
+  <span class="p">{</span>
+    <span class="n">Mat</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">cv_bridge</span><span class="o">::</span><span class="n">toCvShare</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s">"bgr8"</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">image</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">tmp</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="k">return</span><span class="p">;</span>
+    <span class="n">Mat</span> <span class="n">dst</span><span class="p">;</span>
+    <span class="n">undistortRectifyImage</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">calib_file</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">sensor_msgs</span><span class="o">::</span><span class="n">ImagePtr</span> <span class="n">img_left</span><span class="p">;</span>
+    <span class="n">img_left</span> <span class="o">=</span> <span class="n">cv_bridge</span><span class="o">::</span><span class="n">CvImage</span><span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">,</span> <span class="s">"bgr8"</span><span class="p">,</span>
+<span class="n">dst</span><span class="p">).</span><span class="n">toImageMsg</span><span class="p">();</span>
+    <span class="n">pub_img_left</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">img_left</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">catch</span> <span class="p">(</span><span class="n">cv_bridge</span><span class="o">::</span><span class="n">Exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+  <span class="p">{</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This callback function takes a raw stereo (left) image as input. Then it undistorts and rectifies the image using the functions defined above and publishes on the rectified image topic using <code class="highlighter-rouge">pub_img_left</code>. Similarly <code class="highlighter-rouge">imgRightCallback</code> is defined for the right stereo image.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">ros</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="s">"stereo_rectify"</span><span class="p">);</span>
+  <span class="n">ros</span><span class="o">::</span><span class="n">NodeHandle</span> <span class="n">nh</span><span class="p">;</span>
+  <span class="n">image_transport</span><span class="o">::</span><span class="n">ImageTransport</span> <span class="n">it</span><span class="p">(</span><span class="n">nh</span><span class="p">);</span>
+
+  <span class="n">calib_file</span> <span class="o">=</span> <span class="n">FileStorage</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">FileStorage</span><span class="o">::</span><span class="n">READ</span><span class="p">);</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"K1"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">K1</span><span class="p">;</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"K2"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">K2</span><span class="p">;</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"D1"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">D1</span><span class="p">;</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"D2"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">D2</span><span class="p">;</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"R"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">R</span><span class="p">;</span>
+  <span class="n">calib_file</span><span class="p">[</span><span class="s">"T"</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">T</span><span class="p">;</span>
+  <span class="n">findRectificationMap</span><span class="p">(</span><span class="n">calib_file</span><span class="p">,</span> <span class="n">out_img_size</span><span class="p">);</span>
+
+  <span class="n">ros</span><span class="o">::</span><span class="n">Subscriber</span> <span class="n">sub_img_left</span> <span class="o">=</span> <span class="n">nh</span><span class="p">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">imgLeftCallback</span><span class="p">);</span>
+  <span class="n">ros</span><span class="o">::</span><span class="n">Subscriber</span> <span class="n">sub_img_right</span> <span class="o">=</span> <span class="n">nh</span><span class="p">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">imgRightCallback</span><span class="p">);</span>
+
+  <span class="n">pub_img_left</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">advertise</span><span class="p">(</span><span class="s">"/camera_left_rect/image_color"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">pub_img_right</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">advertise</span><span class="p">(</span><span class="s">"/camera_right_rect/image_color"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+  <span class="n">ros</span><span class="o">::</span><span class="n">spin</span><span class="p">();</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>In the main function, the stereo calibration information is read into <code class="highlighter-rouge">calib_file</code>. <code class="highlighter-rouge">sub_img_left</code> and <code class="highlighter-rouge">sub_img_right</code> subscribes to the topics publishing the raw stereo image data. The rectified output images are published to the following topics:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">/camera_left_rect/image_color</code></li>
+  <li><code class="highlighter-rouge">/camera_right_rect/image_color</code></li>
+</ul>
+
+<p>The ros node can be run as</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>rosrun stereo_dense_reconstruction stereo_rectify <span class="o">[</span>/camera/left/topic] <span class="o">[</span>/camera/right/topic] <span class="o">[</span>path/to/calib/file.yml]</code></pre></figure>
+
+<h1 id="dense-3d-reconstruction">Dense 3D Reconstruction</h1>
+
+<p>Generating dense 3D reconstructions involve two major steps: (1) computing a disparity map (2) converting the disparity map into a 3D point cloud. The code for dense reconstruction is implemented in <a href="https://github.com/sourishg/stereo-dense-reconstruction/blob/master/src/dense_reconstruction.cpp"><code class="highlighter-rouge">src/dense_reconstruction.cpp</code></a>.</p>
+
+<p>Having time synced stereo images is important for generating accurate disparity maps. To sync the left and right image messages by their header time stamps, <code class="highlighter-rouge">ApproximateTime</code> is used. The procedure is implemented in the main function of <a href="https://github.com/sourishg/stereo-dense-reconstruction/blob/master/src/dense_reconstruction.cpp"><code class="highlighter-rouge">src/dense_reconstruction.cpp</code></a>.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">message_filters</span><span class="o">::</span><span class="n">Subscriber</span><span class="o">&lt;</span><span class="n">sensor_msgs</span><span class="o">::</span><span class="n">CompressedImage</span><span class="o">&gt;</span> <span class="n">sub_img_left</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="s">"/camera_left_rect/image_color/compressed"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">message_filters</span><span class="o">::</span><span class="n">Subscriber</span><span class="o">&lt;</span><span class="n">sensor_msgs</span><span class="o">::</span><span class="n">CompressedImage</span><span class="o">&gt;</span> <span class="n">sub_img_right</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="s">"/camera_right_rect/image_color/compressed"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="k">typedef</span> <span class="n">message_filters</span><span class="o">::</span><span class="n">sync_policies</span><span class="o">::</span><span class="n">ApproximateTime</span><span class="o">&lt;</span><span class="n">sensor_msgs</span><span class="o">::</span><span class="n">CompressedImage</span><span class="p">,</span> <span class="n">sensor_msgs</span><span class="o">::</span><span class="n">CompressedImage</span><span class="o">&gt;</span> <span class="n">SyncPolicy</span><span class="p">;</span>
+<span class="n">message_filters</span><span class="o">::</span><span class="n">Synchronizer</span><span class="o">&lt;</span><span class="n">SyncPolicy</span><span class="o">&gt;</span> <span class="n">sync</span><span class="p">(</span><span class="n">SyncPolicy</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">sub_img_left</span><span class="p">,</span> <span class="n">sub_img_right</span><span class="p">);</span>
+<span class="n">sync</span><span class="p">.</span><span class="n">registerCallback</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">imgCallback</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">_2</span><span class="p">));</span></code></pre></figure>
+
+<p>This syncs the two rectified image topics, and the callback function <code class="highlighter-rouge">imgCallback</code> receives the time synced messages.</p>
+
+<h2 id="disparity-maps-using-libelas">Disparity Maps using LIBELAS</h2>
+
+<p>LIBELAS (<a href="http://w.cvlibs.net/publications/Geiger2010ACCV.pdf">Efficient Large-Scale Stereo Matching</a>) is a great open source software for generating dense disparity maps. It does not use global optimization techniques and yet produces great results at almost real time. More information about ELAS can be found <a href="http://www.cvlibs.net/software/libelas/">here</a>.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">Mat</span> <span class="nf">generateDisparityMap</span><span class="p">(</span><span class="n">Mat</span><span class="o">&amp;</span> <span class="n">left</span><span class="p">,</span> <span class="n">Mat</span><span class="o">&amp;</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">left</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span> <span class="o">||</span> <span class="n">right</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">left</span><span class="p">;</span>
+  <span class="k">const</span> <span class="n">Size</span> <span class="n">imsize</span> <span class="o">=</span> <span class="n">left</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+  <span class="k">const</span> <span class="kt">int32_t</span> <span class="n">dims</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">imsize</span><span class="p">.</span><span class="n">width</span><span class="p">,</span><span class="n">imsize</span><span class="p">.</span><span class="n">height</span><span class="p">,</span><span class="n">imsize</span><span class="p">.</span><span class="n">width</span><span class="p">};</span>
+  <span class="n">Mat</span> <span class="n">leftdpf</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">zeros</span><span class="p">(</span><span class="n">imsize</span><span class="p">,</span> <span class="n">CV_32F</span><span class="p">);</span>
+  <span class="n">Mat</span> <span class="n">rightdpf</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">zeros</span><span class="p">(</span><span class="n">imsize</span><span class="p">,</span> <span class="n">CV_32F</span><span class="p">);</span>
+
+  <span class="n">Elas</span><span class="o">::</span><span class="n">parameters</span> <span class="n">param</span><span class="p">;</span>
+  <span class="n">param</span><span class="p">.</span><span class="n">postprocess_only_left</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="n">Elas</span> <span class="n">elas</span><span class="p">(</span><span class="n">param</span><span class="p">);</span>
+  <span class="n">elas</span><span class="p">.</span><span class="n">process</span><span class="p">(</span><span class="n">left</span><span class="p">.</span><span class="n">data</span><span class="p">,</span><span class="n">right</span><span class="p">.</span><span class="n">data</span><span class="p">,</span><span class="n">leftdpf</span><span class="p">.</span><span class="n">ptr</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+               <span class="n">rightdpf</span><span class="p">.</span><span class="n">ptr</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="n">dims</span><span class="p">);</span>
+
+  <span class="n">Mat</span> <span class="n">show</span> <span class="o">=</span> <span class="n">Mat</span><span class="p">(</span><span class="n">out_img_size</span><span class="p">,</span> <span class="n">CV_8UC1</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+  <span class="n">leftdpf</span><span class="p">.</span><span class="n">convertTo</span><span class="p">(</span><span class="n">show</span><span class="p">,</span> <span class="n">CV_8U</span><span class="p">,</span> <span class="mf">1.</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">show</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">sensor_msgs</span><span class="o">::</span><span class="n">ImagePtr</span> <span class="n">disp_msg</span><span class="p">;</span>
+    <span class="n">disp_msg</span> <span class="o">=</span> <span class="n">cv_bridge</span><span class="o">::</span><span class="n">CvImage</span><span class="p">(</span><span class="n">std_msgs</span><span class="o">::</span><span class="n">Header</span><span class="p">(),</span> <span class="s">"mono8"</span><span class="p">,</span>
+<span class="n">show</span><span class="p">).</span><span class="n">toImageMsg</span><span class="p">();</span>
+    <span class="n">dmap_pub</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">disp_msg</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">show</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>This function computes the dense disparity map using LIBELAS, and publishes it as a 8-bit grayscale image to the topic <code class="highlighter-rouge">/camera_left_rect/disparity_map</code>. The disparity map is constructed with the left image as reference. The parameters for LIBELAS can be changed in the file <code class="highlighter-rouge">src/elas/elas.h</code>.</p>
+
+<p>Any method other than LIBELAS can be implemented inside the <code class="highlighter-rouge">generateDisparityMap</code> function to generate disparity maps. One can use OpenCV’s <code class="highlighter-rouge">StereoBM</code> class as well. The output should be a 8-bit grayscale image.</p>
+
+<h2 id="d-reconstruction">3D Reconstruction</h2>
+
+<p>Given a disparity map, a corresponding 3D point cloud can be easily constructed. The <code class="highlighter-rouge">Q</code> matrix stored in the calibration file is used for this conversion. The reconstruction is mathematically expressed by the following matrix equation.</p>
+<center>
+$\begin{bmatrix}
+X \\
+Y \\
+Z \\
+W \\
+\end{bmatrix} =
+\begin{bmatrix}
+1 &amp; 0 &amp; 0 &amp; -c_x \\
+0 &amp; 1 &amp; 0 &amp; -c_y \\
+0 &amp; 0 &amp; 0 &amp; f \\
+0 &amp; 0 &amp; -1/T_x &amp; (c_x - c_x')/T_x \\
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+y \\
+d(x, y) \\
+1
+\end{bmatrix}\\$
+</center>
+<p><br />
+where $(X,Y,Z,W)^\top$ denotes the 3D point in homogeneous coordinates. $d(x,y)$ is the disparity of a point $(x,y)$ in the left image. The $4 \times 4$ matrix denotes the <code class="highlighter-rouge">Q</code> matrix. This matrix multiplication in homogeneous coordinates is implemented in the <code class="highlighter-rouge">publishPointCloud</code> function. It publishes a <code class="highlighter-rouge">sensor_msgs/PointCloud</code> message to the topic <code class="highlighter-rouge">camera_left_rect/point_cloud</code>. The point cloud generated is in the reference frame of the left camera. Hence a transformation (<code class="highlighter-rouge">XR</code>, <code class="highlighter-rouge">XT</code>) is applied to transform the point cloud into a different reference frame (as required by the user). The transformation equation is as follows</p>
+
+<center>
+$
+P_B = R \times P_A + T
+$
+</center>
+<p>where $P_A$ is a point in reference frame $A$, $P_B$ is a point in the reference frame $B$. $R$ and $T$ denote the rotation and translation matrices respectively. In this case $R$ = <code class="highlighter-rouge">XR</code> and $T$ = <code class="highlighter-rouge">XT</code>. Figure 1 shows some visualizations of the resulting point clouds from dense disparity maps.</p>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/left1.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/dmap1.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/pcl1.png" height="145px" />
+		</div>
+		
+	
+</div>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/left2.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/dmap2.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/pcl2.png" height="145px" />
+		</div>
+		
+	
+</div>
+
+<div class="imageblock" style="text-align: center;">
+	
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/left3.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/dmap3.png" height="145px" />
+		</div>
+		
+	
+		
+		<div style="display:inline-block;">
+		
+			<img src="../../assets/images/blog/dense_3d/pcl3.png" height="145px" />
+		</div>
+		
+	
+</div>
+
+<div class="imgcap"><b>Fig. 1:</b> Visualizations of the dense disparity maps (generated by LIBELAS) and the resulting point clouds. The data set was collected by a Point Grey Bumblebee camera onboard a Jackal UGV at IIT Kharagpur. <b>(a)</b> Left Image <b>(b)</b> Disparity Map <b>(c)</b> 3D Point Cloud.</div>
+
+<p><br /></p>
+
+<p>Run the dense reconstruction node as</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>rosrun stereo_dense_reconstruction dense_reconstruction <span class="o">[</span>path/to/calib/file.yml]</code></pre></figure>
+
+<p>Visualize the point cloud in <code class="highlighter-rouge">rviz</code></p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>rosrun rviz rviz</code></pre></figure>
+
+<h1 id="point-cloud-transformation">Point Cloud Transformation</h1>
+
+<p>For ground robots with mounted stereo cameras, usually the point clouds are formed in the reference frame of the left camera. Often the point clouds need to be transformed to a different frame e.g., a reference frame with the origin at the centre of rotation of the robot projected on to the ground plane. These transformations are hard to calculate mathematically. Hence it is easier to find these transformations visually, if the geometry of the scene is known.</p>
+
+<p>The transformation from one reference frame to another is represented by the rotation matrix <code class="highlighter-rouge">XR</code> and the translation vector <code class="highlighter-rouge">XT</code>. <code class="highlighter-rouge">XR</code> can be decomposed into Euler angles ($\phi_x, \phi_y, \phi_z$) while <code class="highlighter-rouge">XT</code> contains the translation values in the $X,Y,$ and $Z$ direction. A config file <a href="https://github.com/sourishg/stereo-dense-reconstruction/blob/master/cfg/CamToRobotCalibParams.cfg"><code class="highlighter-rouge">cfg/CamToRobotCalibParams.cfg</code></a> stores these six values. The config file is bound with the <code class="highlighter-rouge">dense_reconstruction</code> node using <code class="highlighter-rouge">dynamic_reconfigure</code>.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">dynamic_reconfigure</span><span class="o">::</span><span class="n">Server</span><span class="o">&lt;</span><span class="n">stereo_dense_reconstruction</span><span class="o">::</span>
+<span class="n">CamToRobotCalibParamsConfig</span><span class="o">&gt;</span> <span class="n">server</span><span class="p">;</span>
+<span class="n">dynamic_reconfigure</span><span class="o">::</span><span class="n">Server</span><span class="o">&lt;</span><span class="n">stereo_dense_reconstruction</span><span class="o">::</span>
+<span class="n">CamToRobotCalibParamsConfig</span><span class="o">&gt;::</span><span class="n">CallbackType</span> <span class="n">f</span><span class="p">;</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">paramsCallback</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">_2</span><span class="p">);</span>
+<span class="n">server</span><span class="p">.</span><span class="n">setCallback</span><span class="p">(</span><span class="n">f</span><span class="p">);</span></code></pre></figure>
+
+<p>The above piece of code implements <code class="highlighter-rouge">dynamic_reconfigure</code> to configure the transformation parameters.</p>
+
+<figure class="highlight"><pre><code class="language-cpp" data-lang="cpp"><span class="n">Mat</span> <span class="nf">composeRotationCamToRobot</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="kt">float</span> <span class="n">y</span><span class="p">,</span> <span class="kt">float</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Mat</span> <span class="n">X</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">CV_64FC1</span><span class="p">);</span>
+  <span class="n">Mat</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">CV_64FC1</span><span class="p">);</span>
+  <span class="n">Mat</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">CV_64FC1</span><span class="p">);</span>
+
+  <span class="n">X</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">X</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">X</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">X</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+
+  <span class="n">Y</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+  <span class="n">Y</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+  <span class="n">Y</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+  <span class="n">Y</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+
+  <span class="n">Z</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">z</span><span class="p">);</span>
+  <span class="n">Z</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">);</span>
+  <span class="n">Z</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">);</span>
+  <span class="n">Z</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">z</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">Z</span><span class="o">*</span><span class="n">Y</span><span class="o">*</span><span class="n">X</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">Mat</span> <span class="nf">composeTranslationCamToRobot</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="kt">float</span> <span class="n">y</span><span class="p">,</span> <span class="kt">float</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">Mat_</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>The above two functions are used to compose the matrices <code class="highlighter-rouge">XR</code> and <code class="highlighter-rouge">XT</code>. <code class="highlighter-rouge">composeRotationCamToRobot</code> finds a rotation matrix from three Euler angles by the $ZYX$ convention. <code class="highlighter-rouge">composeTranslationCamToRobot</code> returns a $3\times 1$ translation matrix.</p>
+
+<p>Initially, the values of <code class="highlighter-rouge">XR</code> and <code class="highlighter-rouge">XT</code> in the calibration file were the $3\times 3$ identity matrix and the $3\times 1$ zero matrix. The function <code class="highlighter-rouge">debugCamToRobotTransformation(XR, XT)</code> can be used to dynamically change the values of <code class="highlighter-rouge">XR</code> and <code class="highlighter-rouge">XT</code> with the help of <code class="highlighter-rouge">dynamic_reconfigure</code>. If the desired transformation is found, the resulting values of <code class="highlighter-rouge">XR</code> and <code class="highlighter-rouge">XT</code> can be updated in the calibration file. To modify the transformation values start <code class="highlighter-rouge">dynamic_reconfigure</code> by</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>rosrun rqt_reconfigure rqt_reconfigure</code></pre></figure>
+
+<p>Refer to the video in the <em>Introduction</em> section to have a better understanding of how the point cloud transformation works. It is shown towards the end of the video.</p>
+
+<h1 id="build-and-run">Build and Run</h1>
+
+<p>Clone the repository <a href="https://github.com/sourishg/stereo-dense-reconstruction">stereo-dense-reconstruction</a> in your ros catkin workspace. Build using <code class="highlighter-rouge">catkin_make</code>. Further instructions on running each node is given in the README of the repository.</p>
+
+<h1 id="references-and-related-stuff">References and Related Stuff</h1>
+
+<ul>
+  <li><a href="https://github.com/sourishg/stereo-calibration">Stereo Camera Calibration</a></li>
+  <li><a href="http://www.cvlibs.net/software/libelas/">LIBELAS webpage</a></li>
+  <li><a href="http://w.cvlibs.net/publications/Geiger2010ACCV.pdf">Efficient Large-Scale Stereo Matching</a> (paper)</li>
+  <li><a href="http://wiki.ros.org/elas_ros">elas_ros</a> (another implementation of ELAS on ROS)</li>
+  <li><a href="http://nghiaho.com/?page_id=671">Finding 3D transformations</a></li>
+</ul>
+
+    </section>
+</article>
+<footer id="post-meta" class="clearfix">
+    <a href="http://facebook.com/lordghosh">
+        <img class="avatar" src="/assets/images/avatar.png">
+        <div>
+            <span class="dark">Sourish Ghosh</span>
+            <span>Dare Mighty Things</span>
+        </div>
+    </a>
+
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http://sourishghosh.com/2017/dense-reconstruction-from-stereo-libelas/ - Dense 3D Reconstruction from Stereo (using LIBELAS) by @sourish_gh"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+    </section>
+</footer>
+
+<div class="fb-like" data-href="/2017/dense-reconstruction-from-stereo-libelas/" data-layout="standard" data-action="like" data-size="small" data-show-faces="false" data-share="true" style="margin-bottom: 25px;"></div>
+
+<!-- Disqus comments -->
+
+    <div class="archive readmore">
+        <h3>Comments</h3>
+        <section class="disqus">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'sourishghosh';
+        var disqus_developer = 0; // developer mode is on
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</section>
+    </div>
+
+
+<!-- Archive post list -->
+
+
+  </section>
+
+  <svg display="none" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+
+<symbol id="icon-rss" viewBox="0 0 1024 1024">
+<title>rss</title>
+<path class="path1" d="M122.88 122.88v121.19c362.803 0 656.896 294.195 656.896 656.998h121.293c0-429.773-348.416-778.189-778.189-778.189zM122.88 365.414v121.293c228.813 0 414.362 185.498 414.362 414.413h121.242c0-295.834-239.821-535.706-535.603-535.706zM239.053 668.621c-64.205 0-116.224 52.122-116.224 116.275s52.019 116.224 116.224 116.224 116.173-52.019 116.173-116.224-51.968-116.275-116.173-116.275z"></path>
+</symbol>
+
+<symbol id="icon-facebook" viewBox="0 0 1024 1024">
+<title>facebook</title>
+<path class="path1" d="M870.4 51.2h-716.8c-56.32 0-102.4 46.080-102.4 102.4v716.8c0 56.371 46.080 102.4 102.4 102.4h358.4v-358.4h-102.4v-126.72h102.4v-104.96c0-110.797 62.054-188.621 192.819-188.621l92.314 0.102v133.376h-61.286c-50.893 0-70.246 38.195-70.246 73.626v86.528h131.482l-29.082 126.669h-102.4v358.4h204.8c56.32 0 102.4-46.029 102.4-102.4v-716.8c0-56.32-46.080-102.4-102.4-102.4z"></path>
+</symbol>
+
+<symbol id="icon-twitter" viewBox="0 0 1024 1024">
+<title>twitter</title>
+<path class="path1" d="M886.579 319.795c0.41 8.294 0.563 16.691 0.563 24.986 0 255.488-194.406 549.99-549.888 549.99-109.21 0-210.739-32-296.294-86.886 15.155 1.792 30.515 2.714 46.080 2.714 90.624 0 173.926-30.925 240.026-82.688-84.531-1.587-155.955-57.395-180.531-134.195 11.776 2.202 23.91 3.379 36.352 3.379 17.664 0 34.765-2.304 50.944-6.707-88.422-17.818-155.034-95.898-155.034-189.594 0-0.819 0-1.587 0-2.406 26.061 14.49 55.91 23.194 87.552 24.218-51.866-34.714-86.016-93.798-86.016-160.922 0-35.379 9.523-68.608 26.214-97.178 95.283 116.992 237.773 193.894 398.387 201.984-3.277-14.182-4.966-28.877-4.966-44.083 0-106.701 86.477-193.178 193.229-193.178 55.603 0 105.83 23.398 141.107 60.979 43.981-8.704 85.35-24.781 122.726-46.899-14.438 45.107-45.107 82.995-84.992 106.906 39.117-4.71 76.288-15.002 111.002-30.413-25.907 38.81-58.675 72.806-96.461 99.994z"></path>
+</symbol>
+
+<symbol id="icon-github" viewBox="0 0 1024 1024">
+<title>github</title>
+<path class="path1" d="M674.816 579.021c-36.762 0-66.56 41.318-66.56 92.109 0 50.893 29.798 92.211 66.56 92.211s66.56-41.318 66.56-92.211c-0.051-50.79-29.798-92.109-66.56-92.109zM906.547 339.251c7.629-18.688 7.936-124.877-32.512-226.611 0 0-92.723 10.189-233.011 106.496-29.44-8.192-79.258-12.186-128.973-12.186-49.818 0-99.584 3.994-129.024 12.186-140.339-96.307-233.062-106.496-233.062-106.496-40.397 101.734-39.987 207.923-32.461 226.611-47.514 51.61-76.544 113.613-76.544 198.195 0 367.923 305.306 373.811 382.31 373.811 17.51 0 52.122 0.102 88.781 0.102 36.608 0 71.27-0.102 88.678-0.102 77.107 0 382.31-5.888 382.31-373.811 0-84.582-28.979-146.586-76.493-198.195zM513.434 866.048h-2.867c-193.075 0-343.501-22.989-343.501-210.688 0-45.005 15.872-86.682 53.606-121.293 62.822-57.702 169.216-27.187 289.894-27.187 0.512 0 1.024 0 1.485 0 0.512 0 0.922 0 1.382 0 120.678 0 227.123-30.515 289.997 27.187 37.632 34.611 53.504 76.288 53.504 121.293 0 187.699-150.374 210.688-343.501 210.688zM349.235 579.021c-36.762 0-66.56 41.318-66.56 92.109 0 50.893 29.798 92.211 66.56 92.211 36.813 0 66.611-41.318 66.611-92.211 0-50.79-29.798-92.109-66.611-92.109z"></path>
+</symbol>
+
+<symbol id="icon-youtube" viewBox="0 0 1024 1024">
+<title>youtube</title>
+<path class="path1" d="M512 117.76c-503.194 0-512 44.749-512 394.24s8.806 394.24 512 394.24 512-44.749 512-394.24-8.806-394.24-512-394.24zM676.096 529.101l-229.888 107.315c-20.122 9.318-36.608-1.126-36.608-23.347v-202.138c0-22.17 16.486-32.666 36.608-23.347l229.888 107.315c20.122 9.421 20.122 24.781 0 34.202z"></path>
+</symbol>
+
+<symbol id="icon-mail" viewBox="0 0 1024 1024">
+<title>mail</title>
+<path class="path1" d="M80.589 270.643c24.986 13.414 371.098 199.373 384 206.285s29.594 10.189 46.387 10.189c16.794 0 33.485-3.277 46.387-10.189s359.014-192.87 384-206.285c25.037-13.466 48.691-65.843 2.765-65.843h-866.253c-45.926 0-22.272 52.378 2.714 65.843zM952.986 383.437c-28.416 14.797-378.214 197.069-395.622 206.182s-29.594 10.189-46.387 10.189-28.979-1.075-46.387-10.189-365.21-191.437-393.626-206.234c-19.968-10.445-19.763 1.792-19.763 11.213s0 373.402 0 373.402c0 21.504 28.979 51.2 51.2 51.2h819.2c22.221 0 51.2-29.696 51.2-51.2 0 0 0-363.93 0-373.35s0.205-21.658-19.814-11.213z"></path>
+</symbol>
+
+<symbol id="icon-spotify" viewBox="0 0 1024 1024">
+<title>spotify</title>
+<path class="path1" d="M512 61.44c-248.883 0-450.56 201.626-450.56 450.56 0 248.781 201.677 450.56 450.56 450.56 248.934 0 450.509-201.728 450.509-450.56 0-248.883-201.523-450.56-450.509-450.56zM690.074 742.502c-8.858 0-15.053-3.379-21.555-7.322-60.877-36.915-136.294-56.269-218.010-56.269-41.677 0-86.682 4.966-133.632 14.592l-5.734 1.434c-5.939 1.434-12.032 3.021-16.691 3.021-18.995 0-33.843-14.746-33.843-33.587 0-19.098 10.752-32.614 28.774-35.994 56.115-12.8 108.954-19.046 161.382-19.046 94.976 0 179.866 22.016 252.467 65.485 12.442 7.27 20.275 15.667 20.275 34.202-0.051 18.483-15.002 33.485-33.434 33.485zM736.819 611.379c-10.598 0-17.562-4.045-23.706-7.629-109.722-65.075-273.050-86.682-407.603-50.842-2.253 0.666-4.301 1.28-6.144 1.894-5.069 1.587-9.779 3.174-16.435 3.174-22.118 0-40.090-18.074-40.090-40.346 0-21.453 11.213-36.454 31.437-42.189 51.866-14.234 100.557-23.654 170.65-23.654 113.254 0 223.078 28.416 309.146 79.923 15.667 8.96 22.784 21.197 22.784 39.475 0 22.221-17.971 40.192-40.038 40.192zM789.862 461.875c-9.984 0-16.128-2.406-25.344-7.373-74.394-44.646-190.464-71.219-310.733-71.219-62.669 0-119.603 6.912-169.267 20.326-1.69 0.41-3.277 0.87-5.018 1.382-5.274 1.587-11.878 3.482-18.688 3.482-26.419 0-47.053-20.89-47.053-47.565 0-23.194 13.005-40.909 34.816-47.36 59.955-17.715 128.973-26.675 205.107-26.675 137.114 0 267.571 30.464 357.939 83.507 16.998 9.677 25.344 24.32 25.344 44.646 0 26.266-20.685 46.848-47.104 46.848z"></path>
+</symbol>
+
+<symbol id="icon-instagram" viewBox="0 0 1024 1024">
+<title>instagram</title>
+<path class="path1" d="M870.4 51.2h-716.8c-56.32 0-102.4 46.080-102.4 102.4v716.8c0 56.371 46.080 102.4 102.4 102.4h716.8c56.32 0 102.4-46.029 102.4-102.4v-716.8c0-56.32-46.080-102.4-102.4-102.4zM511.181 794.778c156.621 0 283.546-127.027 283.546-283.597 0-17.306-2.202-33.997-5.274-50.381h80.947v369.459c0 19.558-15.872 35.328-35.482 35.328h-645.837c-19.61 0-35.482-15.77-35.482-35.328v-369.459h79.309c-3.123 16.384-5.325 33.075-5.325 50.381 0 156.621 127.027 283.597 283.597 283.597zM333.978 511.181c0-97.894 79.36-177.203 177.254-177.203 97.843 0 177.254 79.309 177.254 177.203s-79.411 177.254-177.254 177.254c-97.946 0-177.254-79.36-177.254-177.254zM834.918 307.2h-82.688c-19.558 0-35.43-15.974-35.43-35.43v-82.79c0-19.558 15.872-35.379 35.379-35.379h82.688c19.661 0 35.533 15.821 35.533 35.379v82.739c0 19.507-15.872 35.482-35.482 35.482z"></path>
+</symbol>
+
+<symbol id="icon-linkedin" viewBox="0 0 1024 1024">
+<title>linkedin</title>
+<path class="path1" d="M256 153.6c0 54.374-36.352 101.171-102.451 101.171-62.208 0-102.349-44.134-102.349-98.509 0-55.808 38.912-105.062 102.4-105.062s101.171 46.592 102.4 102.4zM51.2 972.8v-665.6h204.8v665.6h-204.8z"></path>
+<path class="path2" d="M358.4 534.733c0-79.104-2.611-145.203-5.222-202.291h184.013l9.114 88.218h3.891c25.907-41.523 89.395-102.4 195.686-102.4 129.638 0 226.918 86.784 226.918 273.51v381.030h-204.8v-351.283c0-81.613-31.078-143.872-102.4-143.872-54.374 0-81.613 44.032-95.898 80.333-5.222 13.005-6.502 31.13-6.502 49.306v365.517h-204.8v-438.067z"></path>
+</symbol>
+
+<symbol id="icon-google" viewBox="0 0 1024 1024">
+<title>google</title>
+<path class="path1" d="M522.2 438.8v175.6h290.4c-11.8 75.4-87.8 220.8-290.4 220.8-174.8 0-317.4-144.8-317.4-323.2s142.6-323.2 317.4-323.2c99.4 0 166 42.4 204 79l139-133.8c-89.2-83.6-204.8-134-343-134-283 0-512 229-512 512s229 512 512 512c295.4 0 491.6-207.8 491.6-500.2 0-33.6-3.6-59.2-8-84.8l-483.6-0.2z"></path>
+</symbol>
+
+<symbol id="icon-pinterest" viewBox="0 0 1024 1024">
+<title>pinterest</title>
+<path class="path1" d="M512 68.4c-245 0-443.6 198.6-443.6 443.6 0 188 117 348.4 282 413-3.8-35-7.4-89 1.6-127.2 8-34.6 52-220.4 52-220.4s-13.2-26.6-13.2-65.8c0-61.6 35.8-107.8 80.2-107.8 37.8 0 56.2 28.4 56.2 62.4 0 38-24.2 95-36.8 147.6-10.6 44.2 22 80.2 65.6 80.2 78.8 0 139.4-83.2 139.4-203.2 0-106.2-76.4-180.4-185.2-180.4-126.2 0-200.2 94.6-200.2 192.6 0 38.2 14.6 79 33 101.2 3.6 4.4 4.2 8.2 3 12.8-3.4 14-10.8 44.2-12.4 50.4-2 8.2-6.4 9.8-14.8 6-55.4-25.8-90-106.8-90-171.8 0-140 101.6-268.4 293-268.4 153.8 0 273.4 109.6 273.4 256.2 0 152.8-96.4 276-230.2 276-45 0-87.2-23.4-101.6-51 0 0-22.2 84.6-27.6 105.4-10 38.6-37 86.8-55.2 116.2 41.6 12.8 85.6 19.8 131.4 19.8 245 0 443.6-198.6 443.6-443.6 0-245.2-198.6-443.8-443.6-443.8z"></path>
+</symbol>
+
+<symbol id="icon-medium" viewBox="0 0 179.2 179.2">
+<title>medium</title>
+<path transform="scale(0.1,-0.1) translate(0,-1536)" d="M597 1115v-1173q0 -25 -12.5 -42.5t-36.5 -17.5q-17 0 -33 8l-465 233q-21 10 -35.5 33.5t-14.5 46.5v1140q0 20 10 34t29 14q14 0 44 -15l511 -256q3 -3 3 -5zM661 1014l534 -866l-534 266v600zM1792 996v-1054q0 -25 -14 -40.5t-38 -15.5t-47 13l-441 220zM1789 1116 q0 -3 -256.5 -419.5t-300.5 -487.5l-390 634l324 527q17 28 52 28q14 0 26 -6l541 -270q4 -2 4 -6z" />
+</symbol>
+
+<symbol id="icon-vimeo" viewBox="0 0 21 21">
+<title>vimeo</title>
+<path d="M17.811,2.018c2.017,0.053,3.026,1.198,3.036,3.438c0,0.147-0.005,0.3-0.013,0.457c-0.089,1.899-1.502,4.486-4.245,7.76 c-2.829,3.43-5.229,5.147-7.2,5.156c-1.226,0-2.244-1.05-3.061-3.151l-0.858-2.88L4.622,9.922C3.997,7.838,3.329,6.798,2.616,6.798 c-0.156,0-0.697,0.304-1.626,0.91L0,6.537l1.536-1.276l1.511-1.263C4.4,2.914,5.429,2.328,6.135,2.241 c0.094-0.01,0.188-0.013,0.284-0.013c1.449,0,2.354,1.041,2.709,3.124C9.326,6.54,9.49,7.506,9.623,8.248 C9.752,8.992,9.86,9.51,9.946,9.805c0.479,1.97,0.995,2.96,1.55,2.968c0.426,0,1.082-0.642,1.968-1.926 c0.866-1.319,1.332-2.296,1.392-2.932c0.019-0.129,0.026-0.25,0.026-0.362c0-0.861-0.474-1.29-1.418-1.29 c-0.479,0-0.99,0.102-1.537,0.299c0.98-3.021,2.864-4.534,5.65-4.544C17.655,2.018,17.732,2.018,17.811,2.018z"/>
+</symbol>
+
+</defs>
+</svg>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/highlight.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
