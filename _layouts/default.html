@@ -17,10 +17,10 @@
   <meta property="og:site_name" content="{{ site.name }}" />
   <meta property="og:type" content="website" />
   <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.meta_description }}{% endif %}" />
-  {% if page.url == site.baseurl %}
-    <title>Sourish Ghosh | IIT Kharagpur</title>
+  {% if page.title %}
+  <title>{{ site.name }} - {{ page.title }}</title>
   {% else %}
-    <title>{{ site.name }}{% if page.title %} - {{ page.title }}{% endif %}</title>
+  <title>Sourish Ghosh | IIT Kharagpur</title>
   {% endif %}
   <link rel="shortcut icon" href="{{ site.baseurl }}assets/images/favicon.ico">
   <link rel="stylesheet" href="{{ site.baseurl }}assets/css/style.css">
