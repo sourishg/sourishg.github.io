@@ -13,7 +13,7 @@ kramdown:
 
 gems: [jekyll-paginate]
 paginate: 20
-baseurl: sourishghosh.com/
+baseurl: /
 domain_name: 'http://sourishghosh.com'
 google_analytics: 'UA-82908038-1'
 disqus: true
