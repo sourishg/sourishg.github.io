@@ -11,5 +11,5 @@ Research Intern @ **NASA Jet Propulsion Laboratory** (May '17 - July '17)
 
 Research Intern @ **UMass Amherst** (May '16 - August '16)
 
-**[Curriculum Vitae]({{ site.baseurl }}cv.pdf)** (last updated on August 6, 2017)<br>
+**[Curriculum Vitae]({{ site.baseurl }}cv.pdf)** (last updated on August 13, 2017)<br>
 *Email:* sourishg at iitkgp dot ac dot in
