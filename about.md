@@ -4,6 +4,7 @@ permalink: about/
 profile: true
 ---
 
+![Sourish Ghosh]({{ site.baseurl }}assets/images/avatar_2x.png){:.sourish-img}
 
 I am an undergraduate student at the [Indian Institute of Technology Kharagpur](http://www.iitkgp.ac.in), majoring in *Mathematics and Computing*. My research interests mainly lie in perception and planning of autonomous mobile robots.
 
