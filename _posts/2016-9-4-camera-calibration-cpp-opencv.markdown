@@ -16,7 +16,7 @@ extract metric information from 2D images. If you're just looking for the code, 
 
 There are many lens models but for this tutorial we will assume the most commonly used **pinhole model**. The model is described by the two images below:
 
-|![]({{ site.baseurl }}assets/images/blog/camera_calibration/pinhole_model.png)|![]({{ site.baseurl }}assets/images/blog/camera_calibration/pinhole_model_extrinsic.png)|
+|![]({{ site.baseurl }}/assets/images/blog/camera_calibration/pinhole_model.png)|![]({{ site.baseurl }}/assets/images/blog/camera_calibration/pinhole_model_extrinsic.png)|
 
 The task of camera calibration is to determine the parameters of the transformation between an object in 3D space and the 2D image observed by the camera from visual information (images).
 
@@ -55,7 +55,7 @@ $f_x$ and $f_y$ are the focal length of the camera in the x-axis and the y-axis 
 
 You must have `OpenCV 2.4.8+` and `libpopt` (command line args) to run the code. Also, you should have a dataset of calibration images beforehand of a fixed image resolution. Here are two sample images of the checkerboard.
 
-|![]({{ site.baseurl }}assets/images/blog/camera_calibration/left1.jpg)|![]({{ site.baseurl }}assets/images/blog/camera_calibration/left22.jpg)|
+|![]({{ site.baseurl }}/assets/images/blog/camera_calibration/left1.jpg)|![]({{ site.baseurl }}/assets/images/blog/camera_calibration/left22.jpg)|
 
 It is recommended to get at least 30 images of the checkerboard in all possible orientations of the checkerboard to get good calibration results.
 

@@ -4,7 +4,7 @@ permalink: about/
 profile: true
 ---
 
-![Sourish Ghosh]({{ site.baseurl }}assets/images/avatar_2x.png){:.sourish-img}
+![Sourish Ghosh]({{ site.baseurl }}/assets/images/avatar_2x.png){:.sourish-img}
 
 I am an undergraduate student at the [Indian Institute of Technology Kharagpur](http://www.iitkgp.ac.in), majoring in *Mathematics and Computing*. My research interests mainly lie in perception and planning of autonomous mobile robots.
 
@@ -16,4 +16,4 @@ I am a religious follower of [Arsenal FC](http://www.arsenal.com/) and Robert Pi
 
 When I am free, I love to watch movies (Quentin Tarantino, Wes Anderson, and Christopher Nolan are my top three directors) and go out for beer!
 
-[ [curriculum vitae]({{ site.baseurl }}cv.pdf) ]
+[ [curriculum vitae]({{ site.baseurl }}/cv.pdf) ]

@@ -15,7 +15,7 @@ I have also provided a GNU Octave code to quickly calculate the fundamental matr
 
 # Deriving the fundamental matrix
 
-![]({{ site.baseurl }}assets/images/blog/fundamental_matrix/epipolar_geometry.png)
+![]({{ site.baseurl }}/assets/images/blog/fundamental_matrix/epipolar_geometry.png)
 
 Consider the above image. $\mathbf{C}$ and $\mathbf{C'}$ are the camera centers of the left and right camera respectively. The corresponding point for $\mathbf{x}$ (left image) is $\mathbf{x'}$ in the right image. $\mathbf{x'}$ is guaranteed to lie on the epipolar line $\mathbf{l'}$. $\mathbf{X}$ is the coordinate of the point in 3D space. $\mathbf{e}$ and $\mathbf{e'}$ are the epipoles.
 

@@ -19,7 +19,7 @@ If you're just looking for the code, the full implementation can be found here:
 
 The following two images describe a stereo camera setup.
 
-|![]({{ site.baseurl }}assets/images/blog/stereo_calibration/1.png)|![]({{ site.baseurl }}assets/images/blog/stereo_calibration/2.png)|
+|![]({{ site.baseurl }}/assets/images/blog/stereo_calibration/1.png)|![]({{ site.baseurl }}/assets/images/blog/stereo_calibration/2.png)|
 
 We will use the checkerboard method for calibration. It is required that the intrinsics of each camera be known beforehand. Recall the camera matrix $\mathbf{K}$ as
 
@@ -51,7 +51,7 @@ You must have `OpenCV 2.4.8+` and `libpopt` (command line args) to run the code.
 
 |Left Image|Right Image|
 |:---:|:---:|
-|![]({{ site.baseurl }}assets/images/blog/stereo_calibration/left1.jpg)|![]({{ site.baseurl }}assets/images/blog/stereo_calibration/right1.jpg)|
+|![]({{ site.baseurl }}/assets/images/blog/stereo_calibration/left1.jpg)|![]({{ site.baseurl }}/assets/images/blog/stereo_calibration/right1.jpg)|
 
 I have made two of my own image sets available here:
 
