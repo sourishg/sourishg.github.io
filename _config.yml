@@ -11,7 +11,11 @@ highlighter: rouge
 kramdown:
   input: GFM
 
-gems: [jekyll-paginate]
+url: 'http://sourishghosh.com'
+plugins:
+  - jekyll-sitemap
+  - jekyll-paginate
+
 paginate: 20
 baseurl: http://sourishghosh.com/
 domain_name: 'http://sourishghosh.com'
@@ -29,7 +33,6 @@ email: sourishg@iitkgp.ac.in
 scholar: 45-8VtAAAAAJ
 
 # Details for the RSS feed generator
-url:            'http://sourishghosh.com'
 author:         'Sourish Ghosh'
 authorTwitter:  'sourish_gh'
 
