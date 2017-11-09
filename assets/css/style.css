@@ -406,7 +406,7 @@ Post List
 	position: relative;
 	top: 1px;
 	font: 300 17px/1.8 "Helvetica Neue",helvetica,Arial,sans-serif;
-	color: #bbb;
+	color: #666;
 }
 
 #post-list-footer {
@@ -579,7 +579,7 @@ h2.month {
 	position: relative;
 	top: 1px;
 	font: 300 17px/1.7 "Helvetica Neue",helvetica,Arial,sans-serif;
-	color: #bbb;
+	color: #666;
 }
 
 #archive-list li a:hover,#archive-list li:hover .dates {
