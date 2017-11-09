@@ -39,3 +39,10 @@ SURF/JVSRP was a 10 weeks internship program which was not quite long enough for
 {% include image.html images=imgs width="100%" caption="This is the Athena Rover that I used for testing." %}<br>
 
 Whenever I used to step inside JPL for work, there was an unusual charm that made me feel committed to my work and made me believe that even my research will contribute to something greater. The force is really strong there! Seeing places like *Mission Control* at the Space Flight Operations Facility gave me goosebumps. Previously, I only ever saw those rooms in TV programs and movies. Working with the pioneers of space exploration was like a dream come true! If the Jedi were ever real, then they are at JPL! May the force be with them, forever.
+
+<hr>
+
+*This story also appeared on:*
+
+- [Internshala: Internship at NASA JPL – My rendezvous with Mars Rovers!](http://blog.internshala.com/2017/09/internship-at-nasa-jpl-my-rendezvous-with-mars-rovers/)
+- [Youth Ki Awaaz: How I Got A Dream Internship At NASA To Work On The Mars Rover](https://www.youthkiawaaz.com/2017/10/internship-at-nasa-jpl-my-rendezvous-with-mars-rovers/)
