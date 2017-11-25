@@ -10,7 +10,7 @@ I am an undergraduate student at the [Indian Institute of Technology Kharagpur](
 
 During summer 2017, I interned at [NASA Jet Propulsion Laboratory](https://www.jpl.nasa.gov/). I worked on risk-aware probabilistic motion planning for future Mars Rovers which aims to reduce the conservatism of the present autonomous navigator of the [Mars 2020 Rover](https://mars.nasa.gov/mars2020/).
 
-In 2016, I was a summer intern at the [Autonomous Mobile Robotics Laboratory](https://amrl.cs.umass.edu/) at the [University of Massachusetts, Amherst](http://www.umass.edu/). I worked on a new approach to obstacle avoidance using *only* stereo vision without the need for dense 3D reconstruction. [[pdf]](https://www.joydeepb.com/Publications/jpp.pdf)
+In 2016, I was a summer intern at the [Autonomous Mobile Robotics Laboratory](https://amrl.cs.umass.edu/) at the [University of Massachusetts, Amherst](http://www.umass.edu/). I worked on a new approach to obstacle avoidance using *only* stereo vision without the need for dense 3D reconstruction. [[publication]](https://www.joydeepb.com/Publications/jpp.pdf)
 
 I am a religious follower of Arsenal FC and Robert Pires is my favorite footballer of all time! I love playing table tennis and am currently the captain of my college's [table tennis team](https://wiki.metakgp.org/w/Table_Tennis).
 
