@@ -14,6 +14,4 @@ Currently I'm building autonomous unmanned aerial vehicles (UAVs) capable of del
 
 On most days I'm cheerful and friendly but I know all about pain and suffering being a religious [Arsenal](https://www.youtube.com/watch?v=1pZIcO06x6w){:target="_blank"} fan. Apart from football, I love playing table tennis and I captain my college's [table tennis team](https://wiki.metakgp.org/w/Table_Tennis){:target="_blank"}.
 
-<hr>
-# [ [curriculum vitae]({{ site.baseurl }}/cv.pdf) ]
-<br>
+My sporadically updated [curriculum vitae]({{ site.baseurl }}/cv.pdf) holds more information about my experiences and skills.
