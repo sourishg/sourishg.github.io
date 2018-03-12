@@ -727,6 +727,82 @@ h2.month {
 	margin-bottom: 20px;
 }
 
+.research-item {
+	display: grid;
+  grid-template-columns: 40% 60%;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+}
+
+.research-item .img {
+	padding-right: 20px;
+}
+
+.research-item .img img {
+	width: 100%;
+}
+
+.research-item .info {
+
+}
+
+.research-item .info .authors {
+	color: #4f6a91;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.research-item .info .conf {
+	color: #a03535;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.research-item .info .desc {
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+
+.research-item .info ul {
+	list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.research-item .info ul li {
+	list-style-type: none;
+	float: left;
+	margin-right: 10px;
+}
+
+.research-item .info ul li a {
+	display: block;
+  text-align: center;
+  padding: 10px 25px;
+  text-decoration: none;
+  background: #eee;
+  color: #333;
+  border: 1px solid #999;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.research-item .info ul li a:hover {
+	background: #999;
+	color: #fff;
+}
+
+.research-item .info h1 {
+	font-size: 25px;
+	margin-bottom: 10px;
+}
+
+.research-item .info p {
+	font-size: 16px;
+}
+
 table {
   padding: 0; }
   table tr {
