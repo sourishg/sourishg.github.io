@@ -4,7 +4,7 @@ permalink: about/
 profile: true
 ---
 
-I am a senior undergraduate student at the [Indian Institute of Technology Kharagpur](http://www.iitkgp.ac.in){:target="_blank"}, majoring in *Mathematics and Computing*. My research interests mainly lie in perception and planning of autonomous mobile robots.
+I am a senior undergraduate student at the [Indian Institute of Technology Kharagpur](http://www.iitkgp.ac.in){:target="_blank"}, majoring in *Mathematics and Computing*. My research interests mainly lie in perception and planning of autonomous mobile robots. Currently I'm interning at the [iRoM Lab, Princeton University](https://irom-lab.princeton.edu/).
 
 In summer 2017, I interned at [NASA Jet Propulsion Laboratory](https://www.jpl.nasa.gov/){:target="_blank"} where I worked on risk-aware probabilistic motion planning for future Mars Rovers including the [Mars 2020 Rover](https://mars.nasa.gov/mars2020/){:target="_blank"}. 
 
