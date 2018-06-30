@@ -12,9 +12,9 @@ profile: true
 		<h1>Probabilistic Kinematic State Estimation for Motion Planning of Planetary Rovers</h1>
 		<span class="authors">Sourish Ghosh, Kyohei Otsu, Masahiro Ono</span>
 		<br>
-		<span class="conf">RA-L/IROS 2018 (submitted)</span>
+		<span class="conf">IROS 2018 (Madrid, Spain) (To Appear)</span>
 		<p class="desc">
-			We present p-ACE: a probabilistic extension to ACE which is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
+			p-ACE: a probabilistic extension to ACE is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
 		</p>
 	</div>
 </div>
@@ -26,10 +26,8 @@ profile: true
 	<div class="info">
 		<h1>Fast Approximate Collision Detection for Kinematically Constrained Articulated Suspension Systems</h1>
 		<span class="authors">Kyohei Otsu, Guillaume Matheron, Sourish Ghosh, Olivier Toupet, Masahiro Ono</span>
-		<br>
-		<span class="conf">RA-L/IROS 2018 (submitted)</span>
 		<p class="desc">
-			We present a light-weight collision detection algorithm for motion planning of planetary rovers with articulated suspension systems. 
+			ACE is a light-weight collision detection algorithm for motion planning of planetary rovers with articulated suspension systems. 
 			Solving the exact collision detection problem for articulated suspension systems requires simulating the vehicle settling on the terrain, which involves an inverse-kinematics problem with iterative nonlinear optimization under geometric constraints. We propose the Approximate Clearance Evaluation (ACE) algorithm, which obtains conservative bounds on vehicle clearance, attitude, and suspension angles without iterative computation.
 		</p>
 	</div>
