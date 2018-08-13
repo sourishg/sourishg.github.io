@@ -30,6 +30,9 @@ profile: true
 			ACE is a light-weight collision detection algorithm for motion planning of planetary rovers with articulated suspension systems. 
 			Solving the exact collision detection problem for articulated suspension systems requires simulating the vehicle settling on the terrain, which involves an inverse-kinematics problem with iterative nonlinear optimization under geometric constraints. We propose the Approximate Clearance Evaluation (ACE) algorithm, which obtains conservative bounds on vehicle clearance, attitude, and suspension angles without iterative computation.
 		</p>
+		<ul>
+			<li><a href="https://arxiv.org/pdf/1808.00031.pdf" target="blank">PDF</a></li>
+		</ul>
 	</div>
 </div>
 
