@@ -6,6 +6,27 @@ profile: true
 
 <div class="research-item">
 	<div class="img">
+		<img src="{{ site.baseurl }}/assets/images/research/trf/minitaur.jpeg" alt="p-ACE" />
+	</div>
+	<div class="info">
+		<h1>Learning task-relevant features for model predictive control</h1>
+		<span class="authors">Sourish Ghosh, Anirudha Majumdar</span>
+		<p class="desc">
+			Model-based control techniques for systems such as legged robots and unmanned aerial vehicles
+have the ability to explicitly reason about the nonlinearity and uncertainty in the robots' dynamics
+and potentially even provide guarantees on their safety. However, a fundamental and outstanding
+challenge is their limited ability to reason about rich sensory inputs such as depth images or vision.
+Model-based control techniques often treat the robot's perceptual system as a black box and make
+unrealistic assumptions about the perceptual system's output. The goal of this project is to address
+these challenges by leveraging data-driven approaches for learning dynamical models of <i>task-relevant</i>
+perceptual features extracted from rich sensory inputs and using these models for agile and safe robot
+navigation.
+		</p>
+	</div>
+</div>
+
+<div class="research-item">
+	<div class="img">
 		<img src="{{ site.baseurl }}/assets/images/research/pace/m2020.jpg" alt="p-ACE" />
 	</div>
 	<div class="info">
