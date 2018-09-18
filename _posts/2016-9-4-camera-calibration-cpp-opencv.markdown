@@ -192,7 +192,8 @@ The following repository contains the full source. The file you are looking for 
 
 I have used `cmake` to build the source and the README should help you build and run the program on your machine.
 
-# Suggested Reading
+# References
 
 1. [Camera Calibration, by Zhengyou Zhang](http://www.cs.rutgers.edu/~elgammal/classes/cs534/lectures/CameraCalibration-book-chapter.pdf)
 2. [Multiple View Geometry in Computer Vision, by Richard Hartley and Andrew Zisserman](http://www.robots.ox.ac.uk/~vgg/hzbook/)
+3. [Jay Rambhia's Blog on Stereo Calibration](https://jayrambhia.com/blog/stereo-calibration)
