@@ -33,10 +33,13 @@ navigation.
 		<h1>Probabilistic Kinematic State Estimation for Motion Planning of Planetary Rovers</h1>
 		<span class="authors">Sourish Ghosh, Kyohei Otsu, Masahiro Ono</span>
 		<br>
-		<span class="conf">IROS 2018 (Madrid, Spain) (To Appear)</span>
+		<span class="conf">IROS 2018 (Madrid, Spain)</span>
 		<p class="desc">
 			p-ACE: a probabilistic extension to ACE is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
 		</p>
+		<ul>
+			<li><a href="https://sourishghosh.com/publications/pACE_IROS18.pdf" target="blank">PDF</a></li>
+		</ul>
 	</div>
 </div>
 
