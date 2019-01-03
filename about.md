@@ -14,6 +14,6 @@ In summer 2016, I interned at the [Autonomous Mobile Robotics Laboratory, UMass 
 
 Currently, I’m working on building autonomous emergency drones capable of delivering medical supplies in remote, inaccessible areas of rural India with the [Aerial Robotics Lab, Kharagpur](http://www.aerialroboticskgp.org/){:target="_blank"}. I'm also with [Technology Robotix Society](www.robotix.in){:target="_blank"} which aims to spread the culture of robotics in India through various events and workshops.
 
-On most days I'm cheerful and friendly but I know all about pain and suffering being a religious [Arsenal](https://www.youtube.com/watch?v=1pZIcO06x6w){:target="_blank"} fan. Apart from football, I love playing table tennis and I captain my college's [table tennis team](https://wiki.metakgp.org/w/Table_Tennis){:target="_blank"}.
+On most days I'm cheerful and friendly, but I know all about pain and suffering being a religious [Arsenal](https://www.youtube.com/watch?v=1pZIcO06x6w){:target="_blank"} fan. Apart from football, I love playing table tennis, and I captained my college's [table tennis team](https://wiki.metakgp.org/w/Table_Tennis){:target="_blank"} from 2017-2019.
 
 My [curriculum vitae]({{ site.baseurl }}/cv.pdf) holds more information about my experiences and skills.
