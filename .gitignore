@@ -1,3 +1,6 @@
 .DS_Store
 _drafts
 _site
+
+.jekyll-cache/
+.ruby-version
