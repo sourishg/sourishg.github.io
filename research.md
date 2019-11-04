@@ -38,7 +38,7 @@ navigation.
 			p-ACE: a probabilistic extension to ACE is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
 		</p>
 		<ul>
-			<li><a href="https://sourishghosh.com/publications/pACE_IROS18.pdf" target="blank">PDF</a></li>
+			<li><a href="https://sourishghosh.com/publications/pACE_IROS18.pdf" target="blank">Paper</a></li>
 		</ul>
 	</div>
 </div>
@@ -48,14 +48,14 @@ navigation.
 		<img src="{{ site.baseurl }}/assets/images/research/ace/curiosity.jpg" alt="ACE" />
 	</div>
 	<div class="info">
-		<h1>Fast Approximate Collision Detection for Kinematically Constrained Articulated Suspension Systems</h1>
+		<h1>Fast Approximate Clearance Evaluation for Rovers with Articulated Suspension Systems</h1>
 		<span class="authors">Kyohei Otsu, Guillaume Matheron, Sourish Ghosh, Olivier Toupet, Masahiro Ono</span>
 		<p class="desc">
-			ACE is a light-weight collision detection algorithm for motion planning of planetary rovers with articulated suspension systems. 
+			ACE is a light-weight collision detection algorithm for motion planning of planetary rovers with articulated suspension systems.
 			Solving the exact collision detection problem for articulated suspension systems requires simulating the vehicle settling on the terrain, which involves an inverse-kinematics problem with iterative nonlinear optimization under geometric constraints. We propose the Approximate Clearance Evaluation (ACE) algorithm, which obtains conservative bounds on vehicle clearance, attitude, and suspension angles without iterative computation.
 		</p>
 		<ul>
-			<li><a href="https://arxiv.org/pdf/1808.00031.pdf" target="blank">PDF</a></li>
+			<li><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/rob.21892" target="blank">Paper</a></li>
 		</ul>
 	</div>
 </div>
@@ -79,7 +79,7 @@ confident positive stereo matches and confident negative stereo
 matches, which are significantly faster to compute than the
 exact depth of points.</p>
 		<ul>
-			<li><a href="https://www.joydeepb.com/Publications/jpp.pdf" target="blank">PDF</a></li>
+			<li><a href="https://www.joydeepb.com/Publications/jpp.pdf" target="blank">Paper</a></li>
 			<li><a href="https://github.com/umass-amrl/jpp" target="blank">Code</a></li>
 		</ul>
 	</div>
