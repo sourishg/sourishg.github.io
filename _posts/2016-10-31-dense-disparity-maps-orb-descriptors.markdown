@@ -26,7 +26,7 @@ The disparity map shown in the above example is a grayscale image. Pixels which 
 
 # Stereo Calibration and Rectification
 
-Before proceeding to generate a dense disparity map, it is required to [calibrate a pair of stereo cameras](http://sourishghosh.com/2016/stereo-calibration-cpp-opencv/) and rectify the stereo images so that the epipolar lines become horizontal scan lines.
+Before proceeding to generate a dense disparity map, it is required to [calibrate a pair of stereo cameras](http://souri.sh/2016/stereo-calibration-cpp-opencv/) and rectify the stereo images so that the epipolar lines become horizontal scan lines.
 
 # Epipolar Matching
 

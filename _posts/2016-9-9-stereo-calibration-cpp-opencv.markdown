@@ -9,7 +9,7 @@ tags: "computer vision, camera calibration, stereo, opencv, c++"
 
 Before viewing this, it is recommended that you know how to calibrate a single camera and what is meant by calibrating a camera. You can find a tutorial for the same here:
 
-> [http://sourishghosh.com/2016/camera-calibration-cpp-opencv/](http://sourishghosh.com/2016/camera-calibration-cpp-opencv/)
+> [http://souri.sh/2016/camera-calibration-cpp-opencv/](http://souri.sh/2016/camera-calibration-cpp-opencv/)
 
 If you're just looking for the code, the full implementation can be found here:
 
@@ -41,7 +41,7 @@ Let $\mathbf{x}$ and $\mathbf{x'}$ be a point in the left image and right image 
 
 You can find a tutorial to calculate $\mathbf{F}$ given $\mathbf{K_1}$, $\mathbf{K_2}$, $\mathbf{R}$, and $\mathbf{t}$ here:
 
-> [http://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/](http://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/)
+> [http://souri.sh/2016/fundamental-matrix-from-camera-matrices/](http://souri.sh/2016/fundamental-matrix-from-camera-matrices/)
 
 It is advised that in case you do not understand the theory behind stereo vision, then a little bit of reading is to be done before you proceed with this just to get a feel of what is happening and what all these symbols/variables mean. The math behind stereo vision is mostly projective geometry and matrix algebra.
 
@@ -63,7 +63,7 @@ It is recommended to get at least 30 image pairs of the checkerboard in all poss
 
 # Stereo Calibration
 
-The code is almost similar to the one explained [here](http://sourishghosh.com/2016/camera-calibration-cpp-opencv/). I will only explain the important parts of the code, and you can find the full source here:
+The code is almost similar to the one explained [here](http://souri.sh/2016/camera-calibration-cpp-opencv/). I will only explain the important parts of the code, and you can find the full source here:
 
 > [https://github.com/sourishg/stereo-calibration/blob/master/calib_stereo.cpp](https://github.com/sourishg/stereo-calibration/blob/master/calib_stereo.cpp)
 

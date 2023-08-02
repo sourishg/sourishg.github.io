@@ -58,7 +58,7 @@ navigation.
 			p-ACE: a probabilistic extension to ACE is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
 		</p>
 		<ul>
-			<li><a href="https://sourishghosh.com/publications/pACE_IROS18.pdf" target="blank">Paper</a></li>
+			<li><a href="https://souri.sh/publications/pACE_IROS18.pdf" target="blank">Paper</a></li>
 		</ul>
 	</div>
 </div>
