@@ -17,7 +17,8 @@ profile: true
 			The detect-and-avoid problem is the “holy grail” for small aircrafts and drones that need to fly beyond line-of-sight. Delivery drones in particular need to ensure self-separation from other aircraft to ensure safety. While it may seem that aircrafts could be detected via transponders, they are often not available on many aircrafts and even if they are, the rules and regulations do not make it necessary for them to be switched on at all times. Additionally, other flying objects such as birds, balloons, and other drones don’t have transponders. Therefore it is necessary to detect and avoid these objects for fully autonomous flights. Currently, the only effective sensor for aircraft detection is radar, but it is too heavy and expensive for small drones which have size, weight, and power (SWaP) constraints. These constraints even limit LiDAR ranges to be around 100m. For high-speed obstacle avoidance in dynamic environments, objects must be detected at long ranges (>= 500m) to allow sufficient reaction time. Thus, the aim of this project is to create a vision-based aircraft detection and tracking system that focuses primarily on long-range detection.
 		</p>
 		<ul>
-			<li><a href="https://theairlab.org/aircraft-detection/" target="blank">Blog</a></li>
+			<li><a href="https://arxiv.org/pdf/2209.12849">Paper</a></li>
+			<li><a href="https://theairlab.org/aircraft-detection/">Blog</a></li>
 		</ul>
 	</div>
 </div>
@@ -58,7 +59,7 @@ navigation.
 			p-ACE: a probabilistic extension to ACE is a light-weight state estimation algorithm for planetary rovers with kinematically constrained articulated suspension systems. ACE's conservative safety check approach can sometimes lead to over-pessimism: feasible states are often reported as infeasible, thus resulting in frequent false positive detection. p-ACE estimates probability distributions over states instead of deterministic bounds to provide more flexible and less pessimistic worst-case evaluation with probabilistic safety guarantees.
 		</p>
 		<ul>
-			<li><a href="https://souri.sh/publications/pACE_IROS18.pdf" target="blank">Paper</a></li>
+			<li><a href="https://souri.sh/publications/pACE_IROS18.pdf">Paper</a></li>
 		</ul>
 	</div>
 </div>
@@ -77,7 +78,7 @@ navigation.
 			Solving the exact collision detection problem for articulated suspension systems requires simulating the vehicle settling on the terrain, which involves an inverse-kinematics problem with iterative nonlinear optimization under geometric constraints. We propose the Approximate Clearance Evaluation (ACE) algorithm, which obtains conservative bounds on vehicle clearance, attitude, and suspension angles without iterative computation.
 		</p>
 		<ul>
-			<li><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/rob.21892" target="blank">Paper</a></li>
+			<li><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/rob.21892">Paper</a></li>
 		</ul>
 	</div>
 </div>
@@ -101,8 +102,8 @@ confident positive stereo matches and confident negative stereo
 matches, which are significantly faster to compute than the
 exact depth of points.</p>
 		<ul>
-			<li><a href="https://www.joydeepb.com/Publications/jpp.pdf" target="blank">Paper</a></li>
-			<li><a href="https://github.com/umass-amrl/jpp" target="blank">Code</a></li>
+			<li><a href="https://www.joydeepb.com/Publications/jpp.pdf">Paper</a></li>
+			<li><a href="https://github.com/umass-amrl/jpp">Code</a></li>
 		</ul>
 	</div>
 </div>
